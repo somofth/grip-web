@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+playwright
+google-cloud-vision
+openai
+firebase-admin
+python-multipart
+selenium
+pydantic-settings
+Pillow
