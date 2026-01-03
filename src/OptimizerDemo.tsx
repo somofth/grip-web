@@ -479,7 +479,7 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                       <div className="space-y-4">
                          {DUMMY_SECTIONS[unlockedIndex].questions.map(q => (
                             <div key={q.id} className="space-y-2">
-                               <p className="text-sm text-gray-700 font-medium text-left">{q.text}</p>
+                               <p className="text-sm text-gray-700 font-medium text-center">{q.text}</p>
                                <div className="flex gap-1">
                                   {[1,2,3,4,5].map(star => (
                                      <button key={star} className="flex-1 h-8 rounded-lg bg-gray-100 hover:bg-yellow-400 focus:bg-yellow-400 transition-colors text-xs font-bold text-gray-400 focus:text-white">
