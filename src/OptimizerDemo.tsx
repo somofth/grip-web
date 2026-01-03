@@ -27,7 +27,7 @@ export default function OptimizerDemo() {
         mode === 1 ? "bg-[#5387FF]" : "bg-[#F2F4F6]"
     )}>
       <AnimatePresence mode="wait">
-        {mode === 1 && <AnalysisMode key="mode1" />}
+        {mode === 1 && <AnalysisMode key="mode1" onComplete={() => setMode(2)} />}
         {mode === 2 && <ConsumerMode key="mode2" onComplete={() => setMode(3)} />}
         {mode === 3 && <DashboardMode key="mode3" />}
       </AnimatePresence>

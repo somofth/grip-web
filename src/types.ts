@@ -1,2 +1,2 @@
 export type Mode = 1 | 2 | 3;
-export type AnalysisState = 'idle' | 'crawling' | 'analyzing' | 'segmenting' | 'complete';
+export type AnalysisState = 'idle' | 'crawling' | 'analyzing' | 'segmenting' | 'complete' | 'refining_questions';
