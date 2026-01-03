@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
   CheckCircle2, 
-  Lock, 
   ThumbsUp, 
   ThumbsDown, 
   ArrowRight, 
@@ -61,8 +60,8 @@ const DUMMY_SECTIONS = [
     images: ["/detailshots/01.jpg", "/detailshots/03.jpg"],
     color: "from-blue-50 to-white",
     questions: [
-      { id: "q1_1", text: "매력도: 메인 이미지가 시선을 끌고 호기심을 자극하나요?" },
-      { id: "q1_2", text: "공감도: 지저분한 책상 상황이 당신의 상황과 공감이 가나요?" }
+      { id: "q1_1", text: "메인 이미지가 시선을 끌고 호기심을 자극하나요?" },
+      { id: "q1_2", text: "지저분한 책상 상황이 당신의 상황과 공감이 가나요?" }
     ]
   },
   { 
@@ -73,8 +72,8 @@ const DUMMY_SECTIONS = [
     images: ["/detailshots/06.jpg", "/detailshots/07.jpg", "/detailshots/08.jpg"],
     color: "from-gray-50 to-white",
     questions: [
-      { id: "q2_1", text: "신뢰도: 두꺼운 상판과 프레임이 튼튼할 것이라는 확신을 주나요?" },
-      { id: "q2_2", text: "입증력: 하중 테스트가 내구성을 증명하기에 충분한가요?" }
+      { id: "q2_1", text: "두꺼운 상판과 프레임이 튼튼할 것이라는 확신을 주나요?" },
+      { id: "q2_2", text: "하중 테스트가 내구성을 증명하기에 충분한가요?" }
     ]
   },
   { 
@@ -85,8 +84,8 @@ const DUMMY_SECTIONS = [
     images: ["/detailshots/04.jpg", "/detailshots/05.jpg"],
     color: "from-emerald-50 to-white",
     questions: [
-      { id: "q3_1", text: "유용성: 넓은 상판이 당신의 생활 패턴에 유용해 보이나요?" },
-      { id: "q3_2", text: "안전성: E0 친환경 등급 정보가 안심을 주나요?" }
+      { id: "q3_1", text: "넓은 상판이 당신의 생활 패턴에 유용해 보이나요?" },
+      { id: "q3_2", text: "E0 친환경 등급 정보가 안심을 주나요?" }
     ]
   },
   { 
@@ -97,8 +96,8 @@ const DUMMY_SECTIONS = [
     images: ["/detailshots/02.jpg", "/detailshots/09.jpg"],
     color: "from-indigo-50 to-white",
     questions: [
-      { id: "q4_1", text: "가독성: 핵심 장점들이 한눈에 잘 들어오나요?" },
-      { id: "q4_2", text: "정보 충실성: 구매에 필요한 사이즈/소재 정보가 명확한가요?" }
+      { id: "q4_1", text: "핵심 장점들이 한눈에 잘 들어오나요?" },
+      { id: "q4_2", text: "구매에 필요한 사이즈/소재 정보가 명확한가요?" }
     ]
   },
 ];
@@ -384,8 +383,7 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
         {/* Scrollable Content */}
         {!isFinished ? (
            <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
-             {DUMMY_SECTIONS.map((section, index) => {
-               const isLocked = index > unlockedIndex;
+             {DUMMY_SECTIONS.slice(0, unlockedIndex + 1).map((section, index) => {
                
                return (
                  <div 
@@ -395,11 +393,7 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                  >
                    {/* Content Block */}
                    <div 
-                     className={cn(
-                       "w-full flex flex-col items-center justify-start text-center p-0 transition-all duration-500 bg-white",
-                       // section.color, // Remove background color to show images clearly
-                       isLocked ? "blur-xl opacity-50 grayscale" : "blur-0 opacity-100"
-                     )}
+                     className="w-full flex flex-col items-center justify-start text-center p-0 transition-all duration-500 bg-white"
                    >
                      {/* Section Header */}
                      <div className="w-full py-6 px-4 bg-gray-50 border-b border-gray-100">
@@ -425,13 +419,6 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                         ))}
                      </div>
                    </div>
-
-                   {/* Lock Overlay */}
-                   {isLocked && (
-                     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                       <Lock size={48} className="text-gray-400" />
-                     </div>
-                   )}
                  </div>
                );
              })}
@@ -486,7 +473,7 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                         animate={{ opacity: 1 }}
                         className="space-y-4"
                     >
-                      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">상세 피드백</p>
+                      {/* <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">상세 피드백</p> */ }
                       
                       <div className="space-y-3">
                       <div className="space-y-4">

@@ -45,7 +45,7 @@ This is a "Wizard of Oz" demo, meaning backend logic is simulated with animation
 * **Layout:** Limit the content width to max 400px (Mobile Simulator) centered on the screen with a phone frame border.
 * **Logic (Gated Scroll):**
   * The content is divided into 4-5 dummy sections (represented by placeholder images/content).
-  * **Constraint:** The user sees Section 1. Section 2 and beyond are blurred or locked.
+  * **Constraint:** The user sees only the current Section (and previous ones). Future sections are hidden and unscrollable until unlocked.
   * **Action:** At the bottom of the screen, there is an evaluation block.
   * **Evaluation Flow:**
     1. **Binary Choice:** "How was this section?" (Like / Dislike buttons).
