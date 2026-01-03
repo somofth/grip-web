@@ -351,19 +351,40 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   
+  /* New: track if scrolled to bottom */
+  const [canEvaluate, dpSetCanEvaluate] = useState(false);
+  
   // Ref for auto-scrolling
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const [feedbackValues, setFeedbackValues] = useState<Record<string, number>>({});
 
   const handleNext = () => {
     if (unlockedIndex < DUMMY_SECTIONS.length - 1) {
       setUnlockedIndex(prev => prev + 1);
       setShowEvaluation(false);
-      // Determine scroll target logic could go here, but effect handles it better usually
+      setFeedbackValues({}); 
+      dpSetCanEvaluate(false); // Reset for new section
       setTimeout(() => {
-        sectionRefs.current[unlockedIndex + 1]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        sectionRefs.current[unlockedIndex + 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } else {
       setIsFinished(true);
+    }
+  };
+
+  const handleRating = (questionId: string, score: number) => {
+    setFeedbackValues(prev => ({
+      ...prev,
+      [questionId]: score
+    }));
+  };
+
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    // Check if near bottom (< 50px remaining)
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+       dpSetCanEvaluate(true);
     }
   };
 
@@ -382,7 +403,10 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
 
         {/* Scrollable Content */}
         {!isFinished ? (
-           <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+           <div 
+             className="flex-1 overflow-y-auto no-scrollbar pb-32"
+             onScroll={onScroll}
+           >
              {DUMMY_SECTIONS.slice(0, unlockedIndex + 1).map((section, index) => {
                
                return (
@@ -455,13 +479,15 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                       <div className="flex gap-4">
                         <button 
                           onClick={() => setShowEvaluation(true)}
-                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium"
+                          disabled={!canEvaluate}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium disabled:opacity-30 disabled:pointer-events-none"
                         >
                           <ThumbsDown size={20} /> 별로예요
                         </button>
                         <button 
                           onClick={() => setShowEvaluation(true)}
-                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors font-medium"
+                          disabled={!canEvaluate}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors font-medium disabled:opacity-30 disabled:pointer-events-none"
                         >
                           <ThumbsUp size={20} /> 좋아요
                         </button>
@@ -480,12 +506,32 @@ function ConsumerMode({ onComplete }: { onComplete: () => void }) {
                          {DUMMY_SECTIONS[unlockedIndex].questions.map(q => (
                             <div key={q.id} className="space-y-2">
                                <p className="text-sm text-gray-700 font-medium text-center">{q.text}</p>
-                               <div className="flex gap-1">
-                                  {[1,2,3,4,5].map(star => (
-                                     <button key={star} className="flex-1 h-8 rounded-lg bg-gray-100 hover:bg-yellow-400 focus:bg-yellow-400 transition-colors text-xs font-bold text-gray-400 focus:text-white">
-                                       {star}
-                                     </button>
-                                  ))}
+                               <div className="flex items-center justify-between px-2 pt-2">
+                                  <span className="text-xs text-gray-400 font-medium">낮음</span>
+                                  <div className="flex gap-2">
+                                     {[1,2,3,4,5].map(score => {
+                                       const isSelected = feedbackValues[q.id] === score;
+                                       const opacity = 0.15 + (score - 1) * 0.2; // 0.15, 0.35, 0.55, 0.75, 0.95
+                                       const isTextWhite = score > 3;
+                                       
+                                       return (
+                                         <button 
+                                           key={score}
+                                           onClick={() => handleRating(q.id, score)}
+                                           style={isSelected ? { backgroundColor: `rgba(49, 130, 246, ${opacity})` } : {}}
+                                           className={cn(
+                                             "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all shadow-sm",
+                                             isSelected 
+                                               ? (isTextWhite ? "text-white scale-110" : "text-[#3182F6] scale-110")
+                                               : "bg-white border border-gray-200 text-gray-400 hover:border-primary/50"
+                                           )}
+                                         >
+                                           {score}
+                                         </button>
+                                       );
+                                     })}
+                                  </div>
+                                  <span className="text-xs text-gray-400 font-medium">높음</span>
                                </div>
                             </div>
                          ))}
