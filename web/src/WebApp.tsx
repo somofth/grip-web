@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { cn } from "./lib/utils";
+import { cn } from "./lib/utils"; // Adjusted path
 import { MODE_LABELS, DUMMY_SECTIONS } from "./data/optimizerData";
 import type { Mode, Section } from "./types";
-import { AnalysisMode } from "./components/modes/AnalysisMode";
-import { ConsumerMode } from "./components/modes/ConsumerMode";
-import { DashboardMode } from "./components/modes/DashboardMode";
+import { AnalysisMode } from "./AnalysisMode";
+import { DashboardMode } from "./DashboardMode";
 
-export default function OptimizerDemo() {
+export default function WebApp() {
+  // Web Mode only cycles between 1 (Analysis) and 3 (Dashboard)
   const [mode, setMode] = useState<Mode>(1);
 
-  // Lifted State for Sections (Shared between Mode 1 & 2)
+  // Lifted State for Sections (Shared)
   const [sections, setSections] = useState<Section[]>(() => 
     DUMMY_SECTIONS.map(s => ({
       ...s,
@@ -21,8 +21,9 @@ export default function OptimizerDemo() {
   // Global Keyboard Listener for Mode Switching
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Shift + X to toggle modes
       if (e.shiftKey && e.key.toLowerCase() === 'x') {
-        setMode((prev) => (prev === 3 ? 1 : prev + 1) as Mode);
+        setMode((prev) => (prev === 1 ? 3 : 1) as Mode); // Toggle between 1 <-> 3
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -38,16 +39,9 @@ export default function OptimizerDemo() {
         {mode === 1 && (
           <AnalysisMode 
             key="mode1" 
-            onComplete={() => setMode(2)} 
+            onComplete={() => setMode(3)} // Skip Mode 2, go straight to 3
             sections={sections}
             onSectionsChange={setSections}
-          />
-        )}
-        {mode === 2 && (
-          <ConsumerMode 
-            key="mode2" 
-            onComplete={() => setMode(3)} 
-            sections={sections}
           />
         )}
         {mode === 3 && <DashboardMode key="mode3" />}
