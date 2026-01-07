@@ -3,12 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, CheckCircle2, ArrowRight, ChevronDown, Plus, Sparkles } from 'lucide-react';
 import { cn } from "../../lib/utils";
 import { LOADING_MESSAGES, DUMMY_SECTIONS } from "../../data/optimizerData";
-import type { AnalysisState } from "../../types";
+import type { AnalysisState, Section } from "../../types";
 import { Button } from "../ui/Button";
 
 const SPRING_TRANSITION = { type: "spring", stiffness: 200, damping: 25, mass: 1 };
 
-export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
+interface AnalysisModeProps {
+  onComplete: () => void;
+  sections: Section[];
+  onSectionsChange: (sections: Section[]) => void;
+}
+
+export function AnalysisMode({ onComplete, sections, onSectionsChange }: AnalysisModeProps) {
   const [url, setUrl] = useState("");
   const [state, setState] = useState<AnalysisState>('idle');
   const [loadingText, setLoadingText] = useState("");
@@ -20,17 +26,14 @@ export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
     );
   };
 
-  const [sections, setSections] = useState(DUMMY_SECTIONS.map(s => ({
-    ...s,
-    questions: s.questions.map(q => ({ ...q, type: 'objective' }))
-  })));
+  /* Removed local sections state */
 
   const toggleQuestionType = (sectionIndex: number, questionIndex: number) => {
     const newSections = [...sections];
     const q = newSections[sectionIndex].questions[questionIndex];
     // @ts-ignore
     q.type = q.type === 'objective' ? 'subjective' : 'objective';
-    setSections(newSections);
+    onSectionsChange(newSections);
   };
   
   const [targetGender, setTargetGender] = useState<string[]>(['여성']);
@@ -292,7 +295,7 @@ export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
                                                             <button 
                                                                 onClick={() => toggleQuestionType(idx, qIdx)}
                                                                 className={cn(
-                                                                    "px-3 py-1.5 rounded-md text-base font-bold transition-all",
+                                                                    "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
                                                                     // @ts-ignore
                                                                     q.type === 'objective' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
                                                                 )}
@@ -303,7 +306,7 @@ export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
                                                             <button 
                                                                 onClick={() => toggleQuestionType(idx, qIdx)}
                                                                 className={cn(
-                                                                    "px-3 py-1.5 rounded-md text-base font-bold transition-all",
+                                                                    "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
                                                                     // @ts-ignore
                                                                     q.type === 'subjective' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
                                                                 )}
@@ -380,7 +383,7 @@ export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
                                             key={gender}
                                             onClick={() => setTargetGender(prev => prev.includes(gender) ? prev.filter(g => g !== gender) : [...prev, gender])}
                                             className={cn(
-                                                "px-4 py-2 rounded-xl text-base font-medium transition-all border",
+                                                "px-4 py-2 rounded-xl text-sm font-medium transition-all border",
                                                 targetGender.includes(gender) 
                                                     ? "bg-primary text-white border-primary shadow-md" 
                                                     : "bg-white text-gray-500 border-gray-200 hover:bg-gray-100"
@@ -401,7 +404,7 @@ export function AnalysisMode({ onComplete }: { onComplete: () => void }) {
                                             key={age}
                                             onClick={() => setTargetAge(prev => prev.includes(age) ? prev.filter(a => a !== age) : [...prev, age])}
                                             className={cn(
-                                                "px-4 py-2 rounded-xl text-base font-medium transition-all border",
+                                                "px-4 py-2 rounded-xl text-sm font-medium transition-all border",
                                                 targetAge.includes(age) 
                                                     ? "bg-primary text-white border-primary shadow-md" 
                                                     : "bg-white text-gray-500 border-gray-200 hover:bg-gray-100"

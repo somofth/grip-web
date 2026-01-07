@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { cn } from "./lib/utils";
-import { MODE_LABELS } from "./data/optimizerData";
-import type { Mode } from "./types";
+import { MODE_LABELS, DUMMY_SECTIONS } from "./data/optimizerData";
+import type { Mode, Section } from "./types";
 import { AnalysisMode } from "./components/modes/AnalysisMode";
 import { ConsumerMode } from "./components/modes/ConsumerMode";
 import { DashboardMode } from "./components/modes/DashboardMode";
 
 export default function OptimizerDemo() {
   const [mode, setMode] = useState<Mode>(1);
+
+  // Lifted State for Sections (Shared between Mode 1 & 2)
+  const [sections, setSections] = useState<Section[]>(() => 
+    DUMMY_SECTIONS.map(s => ({
+      ...s,
+      questions: s.questions.map(q => ({ ...q, type: 'objective' as const }))
+    }))
+  );
 
   // Global Keyboard Listener for Mode Switching
   useEffect(() => {
@@ -27,8 +35,21 @@ export default function OptimizerDemo() {
         mode === 1 ? "bg-[#5387FF]" : "bg-[#F2F4F6]"
     )}>
       <AnimatePresence mode="wait">
-        {mode === 1 && <AnalysisMode key="mode1" onComplete={() => setMode(2)} />}
-        {mode === 2 && <ConsumerMode key="mode2" onComplete={() => setMode(3)} />}
+        {mode === 1 && (
+          <AnalysisMode 
+            key="mode1" 
+            onComplete={() => setMode(2)} 
+            sections={sections}
+            onSectionsChange={setSections}
+          />
+        )}
+        {mode === 2 && (
+          <ConsumerMode 
+            key="mode2" 
+            onComplete={() => setMode(3)} 
+            sections={sections}
+          />
+        )}
         {mode === 3 && <DashboardMode key="mode3" />}
       </AnimatePresence>
 

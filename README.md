@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# 상세페이지 AI 최적화 솔루션 (Interactive Demo)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+이 프로젝트는 쇼핑몰 상세페이지의 전환율을 최적화하기 위한 **AI 솔루션의 인터랙티브 프로토타입(MVP)**입니다.  
+사용자가 URL을 입력하면 AI가 이를 분석하고, 실제 소비자의 반응을 수집하여, 최종적으로 최적화된 리포트를 제공하는 전 과정을 시뮬레이션합니다.
 
-Currently, two official plugins are available:
+> **Wizard of Oz Demo**: 이 데모는 실제 백엔드 로직 없이 프론트엔드에서 데이터와 흐름을 시뮬레이션하여 사용자 경험(UX)을 검증하기 위해 제작되었습니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ 주요 기능 (Key Features)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+이 데모는 `Shift + X` 키를 눌러 3가지 핵심 모드를 순환할 수 있습니다.
 
-## Expanding the ESLint configuration
+### 1. 🔍 Mode 1: AI 분석 시뮬레이션 (Analysis Mode)
+- **URL 입력 및 분석**: 상품 페이지 URL을 입력하면 AI가 크롤링, 이미지 분할, 구조 분석을 수행하는 과정을 시각화합니다.
+- **섹션 클러스터링**: 긴 상세페이지를 의미 단위(Header, Point, Option 등)로 자동 분류하여 보여줍니다.
+- **다크 테마 UI**: 전문적이고 신뢰감 있는 분석 도구의 느낌을 주는 다크 블루 테마를 적용했습니다.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 2. 📱 Mode 2: 소비자 평가 시뮬레이션 (Consumer Mode)
+- **모바일 뷰 시뮬레이터**: 실제 스마트폰 환경과 동일한 UI에서 평가가 진행됩니다.
+- **게이트 스크롤(Gated Scroll)**: 사용자가 현재 섹션을 평가해야만 다음 섹션의 블러가 해제되고 스크롤이 가능해집니다. (집중도 향상)
+- **인터랙티브 평가**: 좋아요/별로예요 및 객관식/주관식 설문을 통해 정밀한 피드백을 수집합니다.
+- **구매 의사 결정**: 모든 섹션 평가 후, 최종 구매 의사(네/글쎄요/아니요)와 그 이유를 묻습니다.
+- **보상 시스템**: 평가 완료 시 '500P 획득' 애니메이션(Confetti 효과)을 통해 사용자 참여를 유도합니다.
+- **인앱 브라우저**: '구매하기' 버튼 클릭 시 앱 이탈 없이 내부에서 상품 페이지를 확인할 수 있습니다.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 3. 📊 Mode 3: AI 리포트 대시보드 (Report Mode)
+- **데이터 시각화**: 최적화 전후의 이탈률(Bounce Rate), 체류 시간(Dwell Time) 변화를 그래프로 비교합니다.
+- **AI 인사이트**: 수집된 소비자 데이터를 바탕으로 구체적인 개선 제안(예: "신뢰도 보강을 위해 인증 마크 추가")을 제공합니다.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🛠 기술 스택 (Tech Stack)
+
+- **Language**: TypeScript
+- **Framework**: React (Vite)
+- **Styling**: Tailwind CSS, clsx, tailwind-merge
+- **Animation**: Framer Motion, Canvas Confetti
+- **Icons**: Lucide React
+- **Charts**: Recharts
+
+---
+
+## 🚀 실행 방법 (How to Run)
+
+프로젝트 루트 디렉토리에서 다음 명령어를 실행하세요.
+
+### 1. 의존성 설치
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. 개발 서버 실행
+```bash
+npm run dev
 ```
+
+브라우저에서 `http://localhost:5173` (또는 터미널에 표시된 주소)으로 접속하여 데모를 체험할 수 있습니다.
+
+---
+
+## 🎮 단축키 가이드
+
+- **`Shift + X`**: 다음 모드로 전환 (Mode 1 -> Mode 2 -> Mode 3 -> Mode 1)
