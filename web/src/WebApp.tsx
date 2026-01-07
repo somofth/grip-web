@@ -48,10 +48,7 @@ export default function WebApp() {
       </AnimatePresence>
 
       {/* Mode Indicator Overlay */}
-      <div className="fixed bottom-4 right-4 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-xs font-medium shadow-lg z-50 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"/>
-        {MODE_LABELS[mode]} <span className="text-white/50 ml-1">(Shift+X)</span>
-      </div>
+
     </div>
   );
 }

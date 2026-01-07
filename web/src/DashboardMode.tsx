@@ -29,30 +29,30 @@ export function DashboardMode() {
 
          {/* Metric Cards */}
          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
-            <h3 className="text-gray-500 text-sm font-medium flex items-center gap-2">
-               <Eye size={16}/> 총 조회수
+            <h3 className="text-gray-500 text-lg font-medium flex items-center gap-2">
+               <Eye size={20}/> 총 조회수
             </h3>
             <div className="flex items-end gap-3">  
                <span className="text-4xl font-bold text-gray-900">12,450</span>
-               <span className="text-emerald-500 text-sm font-medium mb-1">+12%</span>
+               <span className="text-emerald-500 text-lg font-medium mb-1">+12%</span>
             </div>
          </div>
          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
-             <h3 className="text-gray-500 text-sm font-medium flex items-center gap-2">
-               <MousePointerClick size={16}/> 예상 구매 전환율
+             <h3 className="text-gray-500 text-lg font-medium flex items-center gap-2">
+               <MousePointerClick size={20}/> 예상 구매 전환율
             </h3>
             <div className="flex items-end gap-3">  
                <span className="text-4xl font-bold text-gray-900">3.2%</span>
-               <span className="text-gray-400 text-sm font-normal mb-1">평균 대비 2.1% 우수</span>    
+               <span className="text-gray-400 text-base font-normal mb-1">평균 대비 2.1% 우수</span>    
             </div>
          </div>
          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-40">
-             <h3 className="text-gray-500 text-sm font-medium flex items-center gap-2">
-               <Clock size={16}/> 평균 체류 시간
+             <h3 className="text-gray-500 text-lg font-medium flex items-center gap-2">
+               <Clock size={20}/> 평균 체류 시간
             </h3>
             <div className="flex items-end gap-3">  
                <span className="text-4xl font-bold text-gray-900">4m 12s</span>
-               <span className="text-emerald-500 text-sm font-medium mb-1">+45s</span>
+               <span className="text-emerald-500 text-lg font-medium mb-1">+45s</span>
             </div>
          </div>
 
@@ -111,9 +111,9 @@ export function DashboardMode() {
          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                <h4 className="flex items-center gap-2 font-bold text-blue-900 mb-2">
-                  <AlertCircle size={20} /> AI 핵심 진단
+                  <AlertCircle size={24} /> AI 핵심 진단
                </h4>
-               <p className="text-blue-800 leading-relaxed text-sm lg:text-base">
+               <p className="text-blue-800 leading-relaxed text-lg">
                   사용자들은 <span className="font-bold">3번 섹션 (신뢰도 & 인증)</span>에서 가장 많이 이탈(60%)했습니다. 히트맵 분석 결과, 인증 마크와 고객 후기를 찾으려다 이탈한 것으로 보입니다.
                </p>
             </div>
@@ -122,12 +122,12 @@ export function DashboardMode() {
                   <Sparkles size={100} />
                </div>
                <h4 className="flex items-center gap-2 font-bold text-emerald-900 mb-2">
-                  <Sparkles size={20} /> 추천 최적화 액션
+                  <Sparkles size={24} /> 추천 최적화 액션
                </h4>
-               <p className="text-emerald-800 leading-relaxed text-sm lg:text-base">
+               <p className="text-emerald-800 leading-relaxed text-lg">
                   <strong>Action:</strong> 2번 섹션 직후에 '공식 인증 배너'와 '베스트 리뷰 캐러셀'을 배치하여 신뢰도를 보강하세요.
                   <br/>
-                  <span className="text-sm mt-2 block opacity-80 font-semibold">예상 효과: 신뢰도 점수 +15% 상승</span>
+                  <span className="text-base mt-2 block opacity-80 font-semibold">예상 효과: 신뢰도 점수 +15% 상승</span>
                </p>
             </div>
          </div>

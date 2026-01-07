@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, CheckCircle2, ArrowRight, ChevronDown, HelpCircle, Plus } from 'lucide-react';
 import { cn } from "./lib/utils";
 import { LOADING_MESSAGES } from "./data/optimizerData";
 import type { AnalysisState, Section } from "./types";
@@ -14,7 +14,92 @@ interface AnalysisModeProps {
 
 const SPRING_TRANSITION = { type: "spring" as const, stiffness: 100, damping: 20 };
 
-export function AnalysisMode({ onComplete, sections }: AnalysisModeProps) {
+function QuestionAccordion({ 
+    questions, 
+    onUpdate 
+}: { 
+    questions: Section['questions']; 
+    onUpdate: (newQuestions: Section['questions']) => void; 
+}) {
+    const [isOpen, setIsOpen] = useState(true);
+
+    const handleTextChange = (id: string, newText: string) => {
+        const updated = questions.map(q => q.id === id ? { ...q, text: newText } : q);
+        onUpdate(updated);
+    };
+
+    const handleAddQuestion = () => {
+        const newQuestion = {
+            id: `manual_${Date.now()}`,
+            text: "",
+            type: 'objective' as const,
+            logic: "사용자가 직접 추가한 질문입니다."
+        };
+        onUpdate([...questions, newQuestion]);
+    };
+
+    return (
+        <div className="mt-6 border-t border-gray-300 pt-4">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between w-full text-left group"
+            >
+                <div className="flex items-center gap-2 text-base font-bold text-gray-700 group-hover:text-[#3182F6] transition-colors">
+                    <HelpCircle size={20} className="text-[#3182F6]" />
+                    AI 제안 질문 보기 ({questions.length})
+                </div>
+                <ChevronDown 
+                    size={16} 
+                    className={cn("text-gray-400 transition-transform duration-300", isOpen ? "rotate-180" : "")} 
+                />
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                    >
+                        <div className="pt-4 space-y-3">
+                            {questions.map((q) => (
+                                <div key={q.id} className="bg-gray-50 rounded-xl p-4 text-base relative group/question">
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-bold text-gray-800 mt-2 shrink-0">Q.</span>
+                                        <input 
+                                            type="text"
+                                            value={q.text}
+                                            onChange={(e) => handleTextChange(q.id, e.target.value)}
+                                            className="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:outline-none py-1.5 px-1 font-bold text-gray-800 placeholder:text-gray-400"
+                                            placeholder="질문을 입력하세요"
+                                        />
+                                    </div>
+                                    {q.logic && (
+                                        <p className="text-gray-500 text-base pl-8 border-l-2 border-primary/20 ml-1 mt-1">
+                                            💡 {q.logic}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                            
+                            {/* "Add Question" Button */}
+                            <button 
+                                onClick={handleAddQuestion}
+                                className="w-full py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 font-bold hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Plus size={18} />
+                                직접 추가하기
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+export function AnalysisMode({ onComplete, sections, onSectionsChange }: AnalysisModeProps) {
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState<AnalysisState>('idle');
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MESSAGES.crawling);
@@ -152,8 +237,8 @@ export function AnalysisMode({ onComplete, sections }: AnalysisModeProps) {
                         onClick={onComplete}
                         className="bg-[#3182F6] hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
                     >
-                        <Sparkles size={18} />
-                        리포트 확인하기
+                        <Plus size={18} />
+                        프로젝트 만들기
                     </button>
                 </div>
 
@@ -166,46 +251,63 @@ export function AnalysisMode({ onComplete, sections }: AnalysisModeProps) {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 + 0.5 }}
-                                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex items-start gap-6"
+                                className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col"
                             >
+                                <div className="flex items-start gap-8">
                                 <div className="flex-1">
-                                    <div className="flex items-start justify-between mb-4">
-                                         <div className="flex items-center gap-3">
-                                            <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-                                                Section 0{idx + 1}
-                                            </span>
-                                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                                                <CheckCircle2 size={16} />
-                                            </div>
-                                         </div>
-                                    </div>
-                                    
-                                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#3182F6] transition-colors">{section.title}</h3>
-                                    
-                                    <div className="flex items-start gap-2 mb-4 p-3 bg-blue-50/50 rounded-xl">
-                                        <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                                        <p className="text-sm text-blue-800 font-medium leading-relaxed">
+                                    <div className="flex flex-wrap items-baseline gap-3 mb-4">
+                                        <span className="text-blue-600 text-2xl font-bold">
+                                            0{idx + 1}
+                                        </span>
+                                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#3182F6] transition-colors">
+                                            {section.title}
+                                        </h3>
+                                        <span className="bg-gray-100 text-gray-600 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">
                                             {section.goal}
-                                        </p>
+                                        </span>
                                     </div>
                                     
-                                    <p className="text-gray-500 text-sm leading-relaxed">
-                                        {section.reason}
+                                    <p className="text-gray-500 text-lg leading-relaxed mb-4">
+                                        {section.reason.split(',').map((segment, i, arr) => (
+                                            <span key={i} className="block">
+                                                {segment.trim()}{i < arr.length - 1 ? ',' : ''}
+                                            </span>
+                                        ))}
                                     </p>
                                 </div>
 
                                 {/* Right Side Thumbnail - Square */}
-                                <div className="w-48 h-48 shrink-0 rounded-2xl overflow-hidden relative bg-gray-100 border border-gray-100">
-                                    {section.images[0] ? (
-                                        <img 
-                                            src={section.images[0]} 
-                                            alt="Thumbnail" 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                                {/* Right Side Thumbnails */}
+                                <div className="flex gap-3 shrink-0">
+                                    {section.images.slice(0, 2).map((img, i) => (
+                                        <div key={i} className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200">
+                                            <img 
+                                                src={img} 
+                                                alt={`Thumbnail ${i + 1}`} 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                            />
+                                        </div>
+                                    ))}
+                                    {section.images.length === 0 && (
+                                         <div className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                                            No Image
+                                         </div>
                                     )}
                                 </div>
+                            </div>
+                            
+                            {/* Accordion Questions - Moved outside flex to span full width */}
+                            {section.questions && (
+                                <QuestionAccordion 
+                                    questions={section.questions} 
+                                    onUpdate={(newQs) => {
+                                        const updatedSections = sections.map(s => 
+                                            s.id === section.id ? { ...s, questions: newQs } : s
+                                        );
+                                        onSectionsChange(updatedSections);
+                                    }}
+                                />
+                            )}
                             </motion.div>
                         ))}
                     </div>
