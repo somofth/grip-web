@@ -6,6 +6,18 @@ import { LOADING_MESSAGES } from "./data/optimizerData";
 import type { AnalysisState, Section } from "./types";
 import gripLogo from './assets/grip-logo-w.png';
 
+const CATEGORIES = ["👗 패션/잡화", "🍎 식품/건강", "💄 뷰티", "🏠 리빙/가전", "🍼 육아", "🐶 반려동물", "기타"];
+const TARGET_GENDERS = ["남성", "여성", "무관"];
+const TARGET_AGES = ["10대", "2030", "4050", "60대 이상"];
+const SELLING_POINTS = ["💸 가성비", "✨ 감성/디자인", "🏆 기능/스펙", "trust 신뢰/인증", "🚀 빠른배송"];
+
+type TargetData = {
+    category: string;
+    gender: string;
+    ages: string[];
+    sellingPoint: string;
+};
+
 interface AnalysisModeProps {
   onComplete: () => void;
   sections: Section[];
@@ -101,14 +113,35 @@ function QuestionAccordion({
 
 export function AnalysisMode({ onComplete, sections, onSectionsChange }: AnalysisModeProps) {
   const [url, setUrl] = useState("");
-  const [status, setStatus] = useState<AnalysisState>('idle');
+  // START: Modified status type to include 'selection'
+  const [status, setStatus] = useState<AnalysisState | 'selection'>('idle'); 
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MESSAGES.crawling);
+  const [view, setView] = useState<'analysis' | 'targeting'>('analysis');
+  
+  // Target Form State
+  const [targetData, setTargetData] = useState<TargetData>({
+      category: "",
+      gender: "",
+      ages: [],
+      sellingPoint: ""
+  });
 
-  const startAnalysis = () => {
+  const isFormValid = targetData.category && targetData.gender && targetData.ages.length > 0 && targetData.sellingPoint;
+
+  const handleAgeToggle = (age: string) => {
+      setTargetData(prev => ({
+          ...prev,
+          ages: prev.ages.includes(age) 
+              ? prev.ages.filter(a => a !== age)
+              : [...prev.ages, age]
+      }));
+  };
+
+  const handleUrlSubmit = () => {
     if (!url) return;
     setStatus('crawling');
 
-    // Simulate Process
+    // Simulate Process: Loading first
     setTimeout(() => {
         setStatus('analyzing');
         setLoadingMsg(LOADING_MESSAGES.analyzing);
@@ -119,9 +152,15 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
         setLoadingMsg(LOADING_MESSAGES.segmenting);
     }, 3000);
 
+    // After loading, go to selection
     setTimeout(() => {
-        setStatus('complete');
+        setStatus('selection');
     }, 4500);
+  };
+
+  const startAnalysis = (type: 'thumbnail' | 'detail') => {
+    // Selection made, go to complete
+    setStatus('complete');
   };
 
   const isComplete = status === 'complete';
@@ -131,7 +170,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
       {/* Background with animated gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#5387FF] to-[#3182F6] opacity-100 z-0" />
       
-      {/* Left Panel (Input) - Animates to side on completion */}
+      {/* Left Panel (Input & Selection) */}
       <motion.div 
         layout
         transition={SPRING_TRANSITION}
@@ -147,10 +186,11 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                 <img src={gripLogo} alt="Logo" className="w-full object-contain brightness-0 invert" /> 
              </motion.div>
 
-             {!isComplete && (
+             {!isComplete && status !== 'selection' && (
                 <motion.p 
                     initial={{ opacity: 0 }} 
                     animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
                     className="text-xl text-blue-100 max-w-lg mx-auto leading-relaxed"
                 >
                     고객의 이탈을 막는 <strong>가장 완벽한 논리 구조</strong>를<br/>
@@ -159,42 +199,91 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
              )}
           </motion.div>
 
-          {/* Input Section */}
-          <motion.div layout className="relative group">
-            <div className="absolute inset-0 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all" />
-            <div className="relative flex items-center bg-white rounded-full p-2 shadow-2xl ring-4 ring-white/10">
-                <Search className="text-gray-400 ml-4 w-6 h-6" />
-                <input 
-                    type="text" 
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="진단할 상세페이지 URL을 입력하세요" 
-                    className="flex-1 bg-transparent border-none text-gray-900 placeholder:text-gray-400 text-lg px-4 py-3 focus:ring-0 focus:outline-none"
-                    disabled={status !== 'idle'}
-                    onKeyDown={(e) => e.key === 'Enter' && startAnalysis()}
-                />
-                <button 
-                    onClick={startAnalysis}
-                    disabled={!url || status !== 'idle'}
-                    className="bg-[#191F28] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:hover:bg-[#191F28] flex items-center gap-2 shadow-lg"
-                >
-                    {status === 'idle' ? (
-                        <>무료 진단하기 <ArrowRight className="w-5 h-5" /></>
-                    ) : (
-                        <span className="flex items-center gap-2">
-                           <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
-                           <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-75" />
-                           <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
-                        </span>
-                    )}
-                </button>
-            </div>
-          </motion.div>
-
-          {/* Loading States */}
+           {/* Input Section - Only visible in 'idle' */}
           <AnimatePresence mode="wait">
-            {status !== 'idle' && status !== 'complete' && (
+            {status === 'idle' && (
                 <motion.div 
+                    key="input"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="relative group w-full"
+                >
+                    <div className="absolute inset-0 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all" />
+                    <div className="relative flex items-center bg-white rounded-full p-2 shadow-2xl ring-4 ring-white/10">
+                        <Search className="text-gray-400 ml-4 w-6 h-6" />
+                        <input 
+                            type="text" 
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="진단할 상세페이지 URL을 입력하세요" 
+                            className="flex-1 bg-transparent border-none text-gray-900 placeholder:text-gray-400 text-lg px-4 py-3 focus:ring-0 focus:outline-none"
+                            onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                        />
+                        <button 
+                            onClick={handleUrlSubmit}
+                            disabled={!url}
+                            className="bg-[#191F28] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:hover:bg-[#191F28] flex items-center justify-center gap-2 shadow-lg"
+                        >
+                             무료 진단하기 <ArrowRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Selection Section - Visible in 'selection' */}
+            {status === 'selection' && (
+                <motion.div
+                    key="selection"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="w-full space-y-6"
+                >
+                    <h2 className="text-2xl font-bold text-white text-center mb-8">
+                        어떤 분석을 진행할까요?
+                    </h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={() => startAnalysis('thumbnail')}
+                            className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl p-8 text-left transition-all hover:scale-[1.02] group"
+                        >
+                            <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <span className="text-2xl">🖼️</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">썸네일 분석</h3>
+                            <p className="text-blue-100 text-sm leading-relaxed opacity-80">
+                                클릭률(CTR)을 높이는<br/>매력적인 썸네일 진단
+                            </p>
+                        </button>
+
+                        <button
+                            onClick={() => startAnalysis('detail')}
+                            className="bg-white text-blue-900 rounded-3xl p-8 text-left transition-all hover:scale-[1.02] shadow-xl group border-4 border-white/30"
+                        >
+                            <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <span className="text-2xl">📱</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">상세페이지 분석</h3>
+                            <p className="text-gray-600 text-sm leading-relaxed">
+                                구매 전환율(CVR)을 높이는<br/>최적의 논리 구조 설계
+                            </p>
+                        </button>
+                    </div>
+                    
+                    <button 
+                        onClick={() => setStatus('idle')}
+                        className="mx-auto block text-white/60 hover:text-white text-sm font-medium transition-colors mt-6 underline decoration-white/30 hover:decoration-white"
+                    >
+                        URL 다시 입력하기
+                    </button>
+                </motion.div>
+            )}
+
+            {/* Loading Section */}
+            {status !== 'idle' && status !== 'selection' && status !== 'complete' && (
+                <motion.div 
+                    key="loading"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
@@ -211,10 +300,12 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                     </p>
                 </motion.div>
             )}
-          </AnimatePresence>
+           </AnimatePresence>
         </div>
       </motion.div>
 
+
+      {/* Right Panel (Results) */}
       {/* Right Panel (Results) */}
       <AnimatePresence>
         {isComplete && (
@@ -224,94 +315,222 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                 transition={{ type: "spring", damping: 30, stiffness: 200, delay: 0.2 }}
                 className="flex-1 h-full bg-[#F2F4F6] relative z-20 flex flex-col overflow-hidden"
             >
-                {/* Header */}
-                <div className="bg-white px-8 py-6 shadow-sm z-10 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                             <CheckCircle2 className="text-emerald-500 fill-emerald-50" />
-                             진단 완료: 4개 섹션으로 구조화 성공
-                        </h2>
-                        <p className="text-gray-500 mt-1">AI가 맥락에 따라 상세페이지를 재구성했습니다.</p>
-                    </div>
-                    <button 
-                        onClick={onComplete}
-                        className="bg-[#3182F6] hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
-                    >
-                        <Plus size={18} />
-                        프로젝트 만들기
-                    </button>
-                </div>
-
-                {/* Content Grid */}
-                <div className="flex-1 overflow-y-auto p-8">
-                    <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
-                        {sections.map((section, idx) => (
-                            <motion.div
-                                key={section.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 + 0.5 }}
-                                className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col"
-                            >
-                                <div className="flex items-start gap-8">
-                                <div className="flex-1">
-                                    <div className="flex flex-wrap items-baseline gap-3 mb-4">
-                                        <span className="text-blue-600 text-2xl font-bold">
-                                            0{idx + 1}
-                                        </span>
-                                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#3182F6] transition-colors">
-                                            {section.title}
-                                        </h3>
-                                        <span className="bg-gray-100 text-gray-600 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                                            {section.goal}
-                                        </span>
-                                    </div>
-                                    
-                                    <p className="text-gray-500 text-lg leading-relaxed mb-4">
-                                        {section.reason.split(',').map((segment, i, arr) => (
-                                            <span key={i} className="block">
-                                                {segment.trim()}{i < arr.length - 1 ? ',' : ''}
-                                            </span>
-                                        ))}
-                                    </p>
+                <AnimatePresence mode="wait">
+                    {view === 'analysis' ? (
+                        <motion.div 
+                            key="analysis"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex flex-col h-full relative"
+                        >
+                            {/* Header */}
+                            <div className="bg-white px-8 py-6 shadow-sm z-10 flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                        <CheckCircle2 className="text-emerald-500 fill-emerald-50" />
+                                        진단 완료: 4개 섹션으로 구조화 성공
+                                    </h2>
+                                    <p className="text-gray-500 mt-1">AI가 맥락에 따라 상세페이지를 재구성했습니다.</p>
                                 </div>
+                                <button 
+                                    onClick={() => setView('targeting')}
+                                    className="bg-[#3182F6] hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                                >
+                                    <Plus size={18} />
+                                    프로젝트 만들기
+                                </button>
+                            </div>
 
-                                {/* Right Side Thumbnail - Square */}
-                                {/* Right Side Thumbnails */}
-                                <div className="flex gap-3 shrink-0">
-                                    {section.images.slice(0, 2).map((img, i) => (
-                                        <div key={i} className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200">
-                                            <img 
-                                                src={img} 
-                                                alt={`Thumbnail ${i + 1}`} 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                            />
-                                        </div>
+                            {/* Content Grid */}
+                            <div className="flex-1 overflow-y-auto p-8">
+                                <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
+                                    {sections.map((section, idx) => (
+                                        <motion.div
+                                            key={section.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 + 0.5 }}
+                                            className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col"
+                                        >
+                                            <div className="flex items-start gap-8">
+                                                <div className="flex-1">
+                                                    <div className="flex flex-wrap items-baseline gap-3 mb-4">
+                                                        <span className="text-blue-600 text-2xl font-bold">
+                                                            0{idx + 1}
+                                                        </span>
+                                                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#3182F6] transition-colors">
+                                                            {section.title}
+                                                        </h3>
+                                                        <span className="bg-gray-100 text-gray-600 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                                                            {section.goal}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <p className="text-gray-500 text-lg leading-relaxed mb-4">
+                                                        {section.reason.split(',').map((segment, i, arr) => (
+                                                            <span key={i} className="block">
+                                                                {segment.trim()}{i < arr.length - 1 ? ',' : ''}
+                                                            </span>
+                                                        ))}
+                                                    </p>
+                                                </div>
+
+                                                {/* Right Side Thumbnails */}
+                                                <div className="flex gap-3 shrink-0">
+                                                    {section.images.slice(0, 2).map((img, i) => (
+                                                        <div key={i} className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200">
+                                                            <img 
+                                                                src={img} 
+                                                                alt={`Thumbnail ${i + 1}`} 
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                    {section.images.length === 0 && (
+                                                        <div className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Accordion Questions */}
+                                            {section.questions && (
+                                                <QuestionAccordion 
+                                                    questions={section.questions} 
+                                                    onUpdate={(newQs) => {
+                                                        const updatedSections = sections.map(s => 
+                                                            s.id === section.id ? { ...s, questions: newQs } : s
+                                                        );
+                                                        onSectionsChange(updatedSections);
+                                                    }}
+                                                />
+                                            )}
+                                        </motion.div>
                                     ))}
-                                    {section.images.length === 0 && (
-                                         <div className="w-28 h-28 rounded-2xl overflow-hidden relative bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-xs">
-                                            No Image
-                                         </div>
-                                    )}
                                 </div>
                             </div>
-                            
-                            {/* Accordion Questions - Moved outside flex to span full width */}
-                            {section.questions && (
-                                <QuestionAccordion 
-                                    questions={section.questions} 
-                                    onUpdate={(newQs) => {
-                                        const updatedSections = sections.map(s => 
-                                            s.id === section.id ? { ...s, questions: newQs } : s
-                                        );
-                                        onSectionsChange(updatedSections);
-                                    }}
-                                />
-                            )}
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div 
+                            key="targeting"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex flex-col h-full relative"
+                        >
+                            <div className="bg-white px-8 py-6 shadow-sm z-10">
+                                <h2 className="text-2xl font-bold text-gray-900">프로젝트 설정</h2>
+                                <p className="text-gray-500 mt-1">최적화된 분석 결과를 위해 타깃 정보를 입력해주세요.</p>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8">
+                                <div className="max-w-2xl mx-auto space-y-8 pb-24">
+                                    {/* Category */}
+                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-4">A. 어떤 상품인가요?</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {CATEGORIES.map(cat => (
+                                                <button
+                                                    key={cat}
+                                                    onClick={() => setTargetData({...targetData, category: cat})}
+                                                    className={cn(
+                                                        "px-4 py-3 rounded-xl font-medium transition-all text-sm",
+                                                        targetData.category === cat 
+                                                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
+                                                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                                    )}
+                                                >
+                                                    {cat}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    {/* Target Audience */}
+                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-4">B. 누가 주 고객인가요?</h3>
+                                        
+                                        <div className="mb-6">
+                                            <p className="text-sm text-gray-500 mb-3 font-medium">성별</p>
+                                            <div className="flex gap-2">
+                                                {TARGET_GENDERS.map(gender => (
+                                                    <button
+                                                        key={gender}
+                                                        onClick={() => setTargetData({...targetData, gender})}
+                                                        className={cn(
+                                                            "flex-1 py-3 rounded-xl font-medium transition-all text-sm",
+                                                            targetData.gender === gender
+                                                                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
+                                                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                                        )}
+                                                    >
+                                                        {gender}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm text-gray-500 mb-3 font-medium">연령대 (중복 가능)</p>
+                                            <div className="flex gap-2">
+                                                {TARGET_AGES.map(age => (
+                                                    <button
+                                                        key={age}
+                                                        onClick={() => handleAgeToggle(age)}
+                                                        className={cn(
+                                                            "flex-1 py-3 rounded-xl font-medium transition-all text-sm border-2",
+                                                            targetData.ages.includes(age)
+                                                                ? "border-blue-600 bg-blue-50 text-blue-700" 
+                                                                : "border-transparent bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                                        )}
+                                                    >
+                                                        {age}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    {/* Selling Point */}
+                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-4">C. 가장 강조하고 싶은 강점은?</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {SELLING_POINTS.map(point => (
+                                                <button
+                                                    key={point}
+                                                    onClick={() => setTargetData({...targetData, sellingPoint: point})}
+                                                    className={cn(
+                                                        "px-4 py-3 rounded-xl font-medium transition-all text-sm",
+                                                        targetData.sellingPoint === point
+                                                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" 
+                                                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                                    )}
+                                                >
+                                                    {point}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+
+                            {/* Footer Action */}
+                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 z-20">
+                                <button
+                                    onClick={onComplete}
+                                    disabled={!isFormValid}
+                                    className="w-full max-w-2xl mx-auto block py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed bg-[#3182F6] text-white shadow-blue-500/20"
+                                >
+                                    분석 시작하기
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
         )}
       </AnimatePresence>
