@@ -11,12 +11,13 @@ interface ConsumerModeProps {
   onBack?: () => void;
   sections: Section[];
   productId?: number | null;
+  productTitle?: string;
 }
 
-export function ConsumerMode({ onComplete, onBack, sections, productId }: ConsumerModeProps) {
+export function ConsumerMode({ onComplete, onBack, sections, productId, productTitle }: ConsumerModeProps) {
   const [unlockedIndex, setUnlockedIndex] = useState(0);
   const [showEvaluation, setShowEvaluation] = useState(false);
-  const [feedback, setFeedback] = useState<Record<string, number>>({});
+  const [feedback, setFeedback] = useState<Record<string, number | string>>({});
   const [purchaseIntention, setPurchaseIntention] = useState<'yes' | 'no' | 'maybe' | null>(null);
 
   // Use productId to fetch data in real app
@@ -100,12 +101,22 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
   return (
     <div className="w-full h-full bg-white relative flex flex-col">
       {/* Header */}
-      <div className="h-14 border-b flex items-center justify-between px-4 bg-white z-10 sticky top-0 shrink-0">
+      <div className="h-[4.2rem] border-b flex items-center justify-between px-4 bg-white z-10 sticky top-0 shrink-0">
         <button onClick={onBack} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
             <ChevronLeft size={24} />
         </button>
-        <span className="font-semibold text-sm">상품 상세</span>
+        <span className="font-semibold text-sm line-clamp-1 max-w-[200px]">{productTitle || '상품 상세'}</span>
         <div className="w-10" /> {/* Spacer for centering */}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="h-1 bg-gray-100 w-full z-20 sticky top-[4.2rem]">
+        <motion.div 
+            className="h-full bg-blue-600 origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: unlockedIndex / sections.length }}
+            transition={{ duration: 0.5, ease: "circOut" }}
+        />
       </div>
 
       {/* Scrollable Content */}
@@ -124,18 +135,6 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
                     {section.title}
                 </h3>
                 <p className="text-sm text-gray-500 mt-2">{section.goal}</p>
-             </div>
-
-             {/* Images */}
-             <div className="space-y-2 px-0">
-                {section.images.map((img, i) => (
-                    <img 
-                        key={i} 
-                        src={img} 
-                        alt={`Section ${section.id} detail ${i}`}
-                        className="w-full h-auto object-cover" 
-                    />
-                ))}
              </div>
 
              {/* Images */}
@@ -248,8 +247,6 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
 
       {/* Evaluation Drawer (Bottom Sheet) */}
       <AnimatePresence>
-      {/* Evaluation Drawer (Bottom Sheet) */}
-      <AnimatePresence>
         {showEvaluation && currentQuestions.length > 0 && (
             <>
                 {/* Backdrop */}
@@ -288,37 +285,55 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
                         <div className="space-y-8">
                             {(() => {
                                 const q = currentQuestions[currentQuestionIndex];
+                                const isSubjective = q.type === 'subjective';
+
                                 return (
                                     <div key={q.id} className="animate-in fade-in slide-in-from-right-4 duration-300">
                                         {/* Question Text Centered and Larger */}
                                         <p className="font-bold text-gray-900 mb-8 text-2xl text-center leading-normal break-keep">
                                             {q.text}
                                         </p>
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex justify-between px-1 mb-2">
-                                                <span className="text-xs text-gray-400">아쉬워요</span>
-                                                <span className="text-xs text-gray-400">최고예요</span>
+                                        
+                                        {isSubjective ? (
+                                            <div className="px-4">
+                                                <textarea
+                                                    placeholder="15자 이상 정성스럽게 적어주세요..."
+                                                    value={(feedback[q.id] as string) || ''}
+                                                    onChange={(e) => setFeedback(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                                    className="w-full h-32 p-4 bg-gray-50 rounded-2xl border-none resize-none focus:ring-2 focus:ring-blue-500 text-lg"
+                                                />
+                                                <div className="text-right text-xs text-gray-400 mt-2">
+                                                    {(feedback[q.id] as string || '').length} / 15자 이상
+                                                </div>
                                             </div>
-                                            <div className="flex gap-2">
-                                                {[1, 2, 3, 4, 5].map((score) => {
-                                                    const isActive = feedback[q.id] === score;
-                                                    return (
-                                                        <button
-                                                            key={score}
-                                                            onClick={() => setFeedback(prev => ({ ...prev, [q.id]: score }))}
-                                                            className={cn(
-                                                                "flex-1 h-14 rounded-2xl text-xl font-bold transition-all",
-                                                                isActive 
-                                                                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105" 
-                                                                    : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                                                            )}
-                                                        >
-                                                            {score}
-                                                        </button>
-                                                    );
-                                                })}
+                                        ) : (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex justify-between px-1 mb-2">
+                                                    <span className="text-xs text-gray-400">아쉬워요</span>
+                                                    <span className="text-xs text-gray-400">최고예요</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {[1, 2, 3, 4, 5].map((score) => {
+                                                        const isActive = feedback[q.id] === score;
+                                                        return (
+                                                            <button
+                                                                key={score}
+                                                                onClick={() => setFeedback(prev => ({ ...prev, [q.id]: score }))}
+                                                                className={cn(
+                                                                    "flex-1 h-14 rounded-2xl text-xl font-bold transition-all",
+                                                                    isActive 
+                                                                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105" 
+                                                                        : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                                                                )}
+                                                            >
+                                                                {score}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
+
                                     </div>
                                 );
                             })()}
@@ -334,7 +349,13 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
                                     handleEvaluationSubmit();
                                 }
                             }}
-                            disabled={!(feedback[currentQuestions[currentQuestionIndex].id] > 0)}
+                            disabled={
+                                (() => {
+                                    const answer = feedback[currentQuestions[currentQuestionIndex].id];
+                                    if (typeof answer === 'string') return answer.trim().length < 15;
+                                    return !(answer > 0);
+                                })()
+                            }
                             className="w-full py-4 bg-[#3182F6] text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98]"
                         >
                             {currentQuestionIndex < currentQuestions.length - 1 ? '다음 질문' : (isLastSection ? '평가 완료' : '다음 섹션 열기')}
@@ -343,7 +364,7 @@ export function ConsumerMode({ onComplete, onBack, sections, productId }: Consum
                 </motion.div>
             </>
         )}
-      </AnimatePresence>
+
       </AnimatePresence>
     </div>
   );

@@ -18,7 +18,7 @@ export interface Product {
     category: string;
 }
 
-const DUMMY_PRODUCTS: Product[] = [
+export const DUMMY_PRODUCTS: Product[] = [
     {
         id: 1,
         title: "프리미엄 노이즈 캔슬링 헤드폰 Pro",
@@ -139,9 +139,8 @@ export function Feed({ onSelectProduct }: FeedProps) {
                 <Store />
             ) : (
                 <>
-                    {/* Header */}
-                    <header className="px-6 py-4 bg-white flex items-center justify-between shadow-sm z-10">
-                        <h1 className="text-xl font-bold font-sans tracking-tight text-blue-600">ReelMall</h1>
+                    <header className="px-6 py-6 bg-white flex items-center justify-between shadow-sm z-10">
+                        <img src="/grip-logo.png" alt="Grip" className="h-6 object-contain ml-2" />
                         <div className="flex items-center gap-4 text-gray-600">
                             <Search className="w-6 h-6" />
                             <ShoppingBag className="w-6 h-6" />
