@@ -5,35 +5,33 @@ import { Settings, X } from 'lucide-react';
 import { DUMMY_SECTIONS } from "./data/optimizerData";
 import { ConsumerMode } from "./ConsumerMode";
 import { Feed, DUMMY_PRODUCTS } from "./Feed";
+import { ABTestMode } from "./ABTestMode";
 import type { Section } from "./types";
 
-type ViewState = 'feed' | 'detail';
+type ViewState = 'feed' | 'detail' | 'abtest';
 
 export default function MobileApp() {
   const [view, setView] = useState<ViewState>('feed');
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [abTestSelection, setAbTestSelection] = useState<'A' | 'B' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   
-  const [sections, setSections] = useState<Section[]>(() => 
-    DUMMY_SECTIONS.map(s => ({
-      ...s,
-      questions: s.questions.map(q => ({ ...q, type: 'objective' as const }))
-    }))
-  );
+  const [sections, setSections] = useState<Section[]>(DUMMY_SECTIONS);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.shiftKey && e.key.toLowerCase() === 'x') {
-            setShowConfig(prev => !prev);
-        }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+     const handleKeyDown = (e: KeyboardEvent) => {
+         if (e.shiftKey && e.key.toLowerCase() === 'x') {
+             setShowConfig(prev => !prev);
+         }
+     };
+     window.addEventListener('keydown', handleKeyDown);
+     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const toggleQuestionType = (sectionId: number, questionId: string) => {
-      setSections(prev => prev.map(section => {
+     // ... (remain same)
+     setSections(prev => prev.map(section => {
           if (section.id !== sectionId) return section;
           return {
               ...section,
@@ -54,17 +52,23 @@ export default function MobileApp() {
           setView('detail');
       }, 1500);
   };
+  
+  const handleABTestSelect = (option: 'A' | 'B') => {
+      setAbTestSelection(option);
+      setView('abtest'); // Immediate transition or add loading if desired
+  };
 
   const handleBackToFeed = () => {
       setView('feed');
       setSelectedProductId(null);
+      setAbTestSelection(null);
   };
   
   const selectedProduct = DUMMY_PRODUCTS.find(p => p.id === selectedProductId);
 
   return (
     <div className="min-h-screen font-sans text-text bg-[#F2F4F6] flex flex-col items-center justify-center p-4">
-      {/* Config Modal */}
+      {/* ... (Config Modal remains same) */}
       <AnimatePresence>
           {showConfig && (
               <motion.div 
@@ -130,7 +134,10 @@ export default function MobileApp() {
 
              {!isLoading && view === 'feed' ? (
                  <MotionWrapper key="feed">
-                     <Feed onSelectProduct={handleProductSelect} />
+                     <Feed 
+                        onSelectProduct={handleProductSelect} 
+                        onSelectABTest={handleABTestSelect}
+                     />
                  </MotionWrapper>
              ) : !isLoading && view === 'detail' ? (
                  <MotionWrapper key="detail">
@@ -141,6 +148,14 @@ export default function MobileApp() {
                       productId={selectedProductId}
                       productTitle={selectedProduct?.title}
                     />
+                 </MotionWrapper>
+             ) : !isLoading && view === 'abtest' && abTestSelection ? (
+                 <MotionWrapper key="abtest">
+                     <ABTestMode
+                        selectedOption={abTestSelection}
+                        onBack={handleBackToFeed}
+                        onComplete={handleBackToFeed}
+                     />
                  </MotionWrapper>
              ) : null}
           </AnimatePresence>

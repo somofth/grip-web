@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Search, ShoppingBag, Bell, Star, Home, Heart, User, Store as StoreIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from './lib/utils';
@@ -91,6 +91,7 @@ const CATEGORIES = ["전체", "테크/가전", "패션/잡화", "뷰티", "푸�
 
 interface FeedProps {
     onSelectProduct: (productId: number) => void;
+    onSelectABTest?: (option: 'A' | 'B') => void;
 }
 
 const BANNER_SLIDES = [
@@ -120,7 +121,9 @@ const BANNER_SLIDES = [
     }
 ];
 
-export function Feed({ onSelectProduct }: FeedProps) {
+import { MyPage } from './MyPage';
+
+export function Feed({ onSelectProduct, onSelectABTest }: FeedProps) {
     const [selectedCategory, setSelectedCategory] = useState("전체");
     const [activeTab, setActiveTab] = useState<'home' | 'store' | 'wishlist' | 'my'>('home');
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -137,6 +140,8 @@ export function Feed({ onSelectProduct }: FeedProps) {
         <div className="w-full h-full bg-[#F2F4F6] relative flex flex-col text-gray-900">
             {activeTab === 'store' ? (
                 <Store />
+            ) : activeTab === 'my' ? (
+                <MyPage />
             ) : (
                 <>
                     <header className="px-6 py-6 bg-white flex items-center justify-between shadow-sm z-10">
@@ -195,7 +200,7 @@ export function Feed({ onSelectProduct }: FeedProps) {
                         </div>
 
                         {/* Categories */}
-                        <div className="bg-white py-4 sticky top-0 z-10 shadow-sm border-b border-gray-100">
+                        <div className="bg-white py-4 sticky top-0 z-50 shadow-sm border-b border-gray-100">
                             <div className="flex gap-2 px-6 overflow-x-auto no-scrollbar pb-1">
                                 {CATEGORIES.map((cat) => (
                                     <button
@@ -214,41 +219,90 @@ export function Feed({ onSelectProduct }: FeedProps) {
                             </div>
                         </div>
 
-                        {/* Product List */}
                         <div className="p-6 grid grid-cols-2 gap-4 pb-24">
-                            {DUMMY_PRODUCTS.map((product) => (
-                                <motion.div
-                                    key={product.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={() => onSelectProduct(product.id)}
-                                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
-                                >
-                                    <div className="aspect-[4/5] relative bg-gray-100">
-                                        <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
-                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1">
-                                            <img src={coinsImg} alt="P" className="w-3 h-3" />
-                                            +{product.points}P
+                            {DUMMY_PRODUCTS.map((product, index) => (
+                                <Fragment key={product.id}>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        onClick={() => onSelectProduct(product.id)}
+                                        className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
+                                    >
+                                        <div className="aspect-[4/5] relative bg-gray-100">
+                                            <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+                                                <img src={coinsImg} alt="P" className="w-3 h-3" />
+                                                +{product.points}P
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="p-4 flex flex-col flex-1">
-                                        <span className="text-xs text-gray-400 font-bold mb-1">{product.brand}</span>
-                                        <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
-                                            {product.title}
-                                        </h3>
-                                        <div className="mt-auto pt-2 flex items-end justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="text-lg font-bold text-gray-900">{product.price}</span>
-                                                <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                                    <span className="text-gray-600 font-semibold">{product.rating}</span>
-                                                    <span>({product.reviews})</span>
+                                        <div className="p-4 flex flex-col flex-1">
+                                            <span className="text-xs text-gray-400 font-bold mb-1">{product.brand}</span>
+                                            <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
+                                                {product.title}
+                                            </h3>
+                                            <div className="mt-auto pt-2 flex items-end justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="text-lg font-bold text-gray-900">{product.price}</span>
+                                                    <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                                        <span className="text-gray-600 font-semibold">{product.rating}</span>
+                                                        <span>({product.reviews})</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </motion.div>
+                                    </motion.div>
+                                    {index === 1 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="col-span-2 bg-white rounded-3xl p-6 flex flex-col gap-6 border border-gray-100 shadow-lg relative overflow-hidden mb-4"
+                                        >
+                                            {/* Header */}
+                                            <div className="z-10 flex flex-col items-center text-center">
+                                                <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1.5 rounded-full mb-3 inline-block">
+                                                    🎁 참여하면 포인트 지급
+                                                </span>
+                                                <h3 className="text-xl font-bold text-gray-900 leading-snug mb-2">
+                                                    어떤 썸네일이 더 끌리나요?
+                                                </h3>
+                                                <p className="text-gray-500 text-sm">
+                                                    더 사고 싶은 상품을 골라주세요.<br/>
+                                                    당신의 선택이 제품 출시에 반영됩니다!
+                                                </p>
+                                            </div>
+
+                                            {/* Image Comparison */}
+                                            <div className="flex gap-2 z-10 justify-center items-center px-0 w-full">
+                                                <div 
+                                                    className="flex-1 aspect-[4/5] rounded-xl overflow-hidden border border-gray-100 shadow-md relative group cursor-pointer active:scale-95 transition-transform"
+                                                    onClick={() => onSelectABTest?.('A')}
+                                                >
+                                                    <div className="absolute top-2 left-2 w-7 h-7 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white text-sm font-bold z-10 transition-colors group-hover:bg-purple-600">A</div>
+                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20" />
+                                                    <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400" className="w-full h-full object-cover" alt="A" />
+                                                </div>
+                                                
+                                                <div className="text-xl font-bold text-gray-300 italic px-1">VS</div>
+
+                                                <div 
+                                                    className="flex-1 aspect-[4/5] rounded-xl overflow-hidden border border-gray-100 shadow-md relative group cursor-pointer active:scale-95 transition-transform"
+                                                    onClick={() => onSelectABTest?.('B')}
+                                                >
+                                                    <div className="absolute top-2 left-2 w-7 h-7 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white text-sm font-bold z-10 transition-colors group-hover:bg-purple-600">B</div>
+                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20" />
+                                                    <img src="https://images.unsplash.com/photo-1596462502278-27bfdd403cc2?w=400&auto=format&fit=crop&q=60" className="w-full h-full object-cover" alt="B" />
+                                                </div>
+                                            </div>
+
+                                            {/* Footer Text */}
+                                            <div className="w-full bg-gray-50 py-3 rounded-xl text-center text-sm font-bold text-gray-400">
+                                                현재 <span className="text-purple-600">48명</span> 투표 중
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </Fragment>
                             ))}
                         </div>
                     </div>
