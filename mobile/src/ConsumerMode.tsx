@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Lock } from 'lucide-react';
+import { Check, ChevronLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from "./lib/utils";
 import type { Section } from "./types";
@@ -8,14 +8,27 @@ import coinsImg from './assets/coins.png';
 
 interface ConsumerModeProps {
   onComplete: () => void;
+  onBack?: () => void;
   sections: Section[];
+  productId?: number | null;
 }
 
-export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
+export function ConsumerMode({ onComplete, onBack, sections, productId }: ConsumerModeProps) {
   const [unlockedIndex, setUnlockedIndex] = useState(0);
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, number>>({});
   const [purchaseIntention, setPurchaseIntention] = useState<'yes' | 'no' | 'maybe' | null>(null);
+
+  // Use productId to fetch data in real app
+  useEffect(() => {
+    if (productId) {
+        console.log("Loading product:", productId);
+    }
+  }, [productId]);
+
+  const [isSectionViewed, setIsSectionViewed] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); 
+  const sectionEndRef = useRef<HTMLDivElement>(null);
 
   const currentSection = sections[unlockedIndex];
   const isLastSection = unlockedIndex === sections.length - 1;
@@ -23,14 +36,31 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
 
   // Auto-scroll when unlocking new section
   useEffect(() => {
-    if (scrollContainerRef.current) {
+    setIsSectionViewed(false); // Reset view status for new section
+    
+    if (unlockedIndex > 0) {
       setTimeout(() => {
-        scrollContainerRef.current?.scrollTo({
-            top: scrollContainerRef.current.scrollHeight,
-            behavior: 'smooth'
-        });
-      }, 100);
+        const sectionElement = document.getElementById(`section-${unlockedIndex}`);
+        if (sectionElement) {
+            sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300); 
     }
+  }, [unlockedIndex]);
+
+  // Observer for section end
+  useEffect(() => {
+      const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+              setIsSectionViewed(true);
+          }
+      }, { threshold: 0.5 });
+
+      if (sectionEndRef.current) {
+          observer.observe(sectionEndRef.current);
+      }
+
+      return () => observer.disconnect();
   }, [unlockedIndex]);
 
   const handleEvaluationSubmit = () => {
@@ -59,20 +89,23 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
   };
 
   const currentQuestions = currentSection?.questions || [];
-  const canSubmitEvaluation = currentQuestions.every(q => (feedback[q.id] || 0) > 0);
-
+  
   const handlePurchaseSubmit = (decision: 'yes' | 'no' | 'maybe') => {
       setPurchaseIntention(decision);
       triggerConfetti();
       // Show completion screen after a delay
-      setTimeout(() => onComplete(), 3000); 
+      setTimeout(() => onComplete(), 5000); 
   };
 
   return (
-    <div className="w-full max-w-[400px] h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden relative flex flex-col mx-auto my-4">
+    <div className="w-full h-full bg-white relative flex flex-col">
       {/* Header */}
-      <div className="h-14 border-b flex items-center justify-center bg-white z-10 sticky top-0 shrink-0">
-        <span className="font-semibold text-sm">공식 브랜드스토어</span>
+      <div className="h-14 border-b flex items-center justify-between px-4 bg-white z-10 sticky top-0 shrink-0">
+        <button onClick={onBack} className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+            <ChevronLeft size={24} />
+        </button>
+        <span className="font-semibold text-sm">상품 상세</span>
+        <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
       {/* Scrollable Content */}
@@ -81,9 +114,9 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
         className="flex-1 overflow-y-auto no-scrollbar pb-32 relative bg-gray-50"
       >
         {sections.slice(0, unlockedIndex + 1).map((section, idx) => (
-          <div key={section.id} className={cn("bg-white mb-4 shadow-sm pb-8", idx !== 0 && "mt-2")}>
+          <div key={section.id} id={`section-${idx}`} className={cn("bg-white mb-4 shadow-sm pb-8", idx !== 0 && "mt-2")}>
              {/* Section Header */}
-             <div className={`p-6 bg-gradient-to-b ${section.color || 'from-blue-50 to-white'}`}>
+             <div className={`p-6 bg-gradient-to-b ${section.color || 'from-blue-50 to-white'} text-center`}>
                 <span className="text-xs font-bold text-blue-600 tracking-widest uppercase mb-1 block">
                     Section 0{idx + 1}
                 </span>
@@ -105,38 +138,24 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
                 ))}
              </div>
 
-             {/* Evaluation Trigger (Shown for the current unlocked section only) */}
-             {idx === unlockedIndex && !purchaseIntention && (
-                 <div className="px-6 mt-8">
-                     <div className="bg-[#F2F4F6] rounded-2xl p-6 text-center">
-                         <p className="text-gray-900 font-bold mb-2">이 섹션은 어떠셨나요?</p>
-                         <p className="text-xs text-gray-500 mb-4">평가를 완료하면 다음 내용을 볼 수 있어요</p>
-                         
-                         <button 
-                            onClick={() => setShowEvaluation(true)}
-                            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
-                         >
-                            <Check size={18} />
-                            {isLastSection ? '평가하고 구매 결정하기' : '평가하고 계속 보기'}
-                         </button>
-                     </div>
-                 </div>
+             {/* Images */}
+             <div className="space-y-2 px-0">
+                {section.images.map((img, i) => (
+                    <img 
+                        key={i} 
+                        src={img} 
+                        alt={`Section ${section.id} detail ${i}`}
+                        className="w-full h-auto object-cover" 
+                    />
+                ))}
+             </div>
+             
+             {/* Observer Target for Scroll Detection */}
+             {idx === unlockedIndex && (
+                 <div ref={sectionEndRef} className="h-4 w-full" />
              )}
           </div>
         ))}
-        
-        {/* Placeholder for Next Locked Section */}
-        {!isLastSection && !purchaseIntention && (
-            <div className="p-6 opacity-50 blur-sm pointer-events-none relative h-64 overflow-hidden bg-white mt-4 mx-4 rounded-xl border border-gray-100">
-                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                     <div className="bg-gray-900/10 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-2 text-gray-600 font-bold">
-                         <Lock size={16} />
-                         <span>이전 섹션을 평가해주세요</span>
-                     </div>
-                 </div>
-                 <div className="h-full bg-gray-100 animate-pulse"></div>
-            </div>
-        )}
 
         {/* Final Purchase Decision Screen (Shown after last section evaluation) */}
         {isLastSection && unlockedIndex === sections.length - 1 && purchaseIntention === null && (
@@ -160,6 +179,23 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
              </div>
         )}
       </div>
+
+      {/* Fixed Bottom Action Button */}
+      {!purchaseIntention && !showEvaluation && (
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent pt-12 z-20">
+              <button 
+                  onClick={() => {
+                      setCurrentQuestionIndex(0);
+                      setShowEvaluation(true);
+                  }}
+                  disabled={!isSectionViewed}
+                  className="w-full py-4 bg-[#3182F6] text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                  <Check size={20} />
+                  {isLastSection ? '평가하고 구매 결정하기' : '평가하고 계속 보기'}
+              </button>
+          </div>
+      )}
 
       {/* Completion (Reward) Overlay */}
       <AnimatePresence>
@@ -212,7 +248,9 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
 
       {/* Evaluation Drawer (Bottom Sheet) */}
       <AnimatePresence>
-        {showEvaluation && (
+      {/* Evaluation Drawer (Bottom Sheet) */}
+      <AnimatePresence>
+        {showEvaluation && currentQuestions.length > 0 && (
             <>
                 {/* Backdrop */}
                 <motion.div 
@@ -229,62 +267,83 @@ export function ConsumerMode({ onComplete, sections }: ConsumerModeProps) {
                     animate={{ y: 0 }}
                     exit={{ y: "100%" }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2rem] z-50 p-6 pb-8 h-[70vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                    className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[2rem] z-50 p-6 pb-8 h-[50vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
                 >
-                    <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
+                    <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-8" />
                     
-                    <div className="flex-1 overflow-y-auto no-scrollbar">
-                        <h3 className="text-2xl font-bold mb-2">상세 평가</h3>
-                        <p className="text-gray-500 mb-8">가장 솔직한 의견을 남겨주세요.</p>
+                    <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col justify-center">
+                         {/* Progress Indicator */}
+                         <div className="flex gap-1 mb-6 justify-center">
+                            {currentQuestions.map((_, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className={cn(
+                                        "h-1 rounded-full transition-all", 
+                                        idx === currentQuestionIndex ? "w-8 bg-blue-500" : "w-2 bg-gray-200"
+                                    )} 
+                                />
+                            ))}
+                         </div>
 
                         <div className="space-y-8">
-                            {currentQuestions.map((q) => (
-                                <div key={q.id}>
-                                    <p className="font-bold text-gray-900 mb-3 text-lg">
-                                        Q. {q.text}
-                                    </p>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex justify-between px-1 mb-2">
-                                            <span className="text-xs text-gray-400">아쉬워요</span>
-                                            <span className="text-xs text-gray-400">최고예요</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            {[1, 2, 3, 4, 5].map((score) => {
-                                                const isActive = feedback[q.id] === score;
-                                                return (
-                                                    <button
-                                                        key={score}
-                                                        onClick={() => setFeedback(prev => ({ ...prev, [q.id]: score }))}
-                                                        className={cn(
-                                                            "flex-1 h-12 rounded-xl text-lg font-bold transition-all",
-                                                            isActive 
-                                                                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105" 
-                                                                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                                                        )}
-                                                    >
-                                                        {score}
-                                                    </button>
-                                                );
-                                            })}
+                            {(() => {
+                                const q = currentQuestions[currentQuestionIndex];
+                                return (
+                                    <div key={q.id} className="animate-in fade-in slide-in-from-right-4 duration-300">
+                                        {/* Question Text Centered and Larger */}
+                                        <p className="font-bold text-gray-900 mb-8 text-2xl text-center leading-normal break-keep">
+                                            {q.text}
+                                        </p>
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex justify-between px-1 mb-2">
+                                                <span className="text-xs text-gray-400">아쉬워요</span>
+                                                <span className="text-xs text-gray-400">최고예요</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {[1, 2, 3, 4, 5].map((score) => {
+                                                    const isActive = feedback[q.id] === score;
+                                                    return (
+                                                        <button
+                                                            key={score}
+                                                            onClick={() => setFeedback(prev => ({ ...prev, [q.id]: score }))}
+                                                            className={cn(
+                                                                "flex-1 h-14 rounded-2xl text-xl font-bold transition-all",
+                                                                isActive 
+                                                                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105" 
+                                                                    : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                                                            )}
+                                                        >
+                                                            {score}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })()}
                         </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-gray-100">
+                    <div className="mt-8 pt-0">
                         <button
-                            onClick={handleEvaluationSubmit}
-                            disabled={!canSubmitEvaluation}
+                            onClick={() => {
+                                if (currentQuestionIndex < currentQuestions.length - 1) {
+                                    setCurrentQuestionIndex(prev => prev + 1);
+                                } else {
+                                    handleEvaluationSubmit();
+                                }
+                            }}
+                            disabled={!(feedback[currentQuestions[currentQuestionIndex].id] > 0)}
                             className="w-full py-4 bg-[#3182F6] text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98]"
                         >
-                            {isLastSection ? '평가 완료' : '다음 섹션 열기'}
+                            {currentQuestionIndex < currentQuestions.length - 1 ? '다음 질문' : (isLastSection ? '평가 완료' : '다음 섹션 열기')}
                         </button>
                     </div>
                 </motion.div>
             </>
         )}
+      </AnimatePresence>
       </AnimatePresence>
     </div>
   );
