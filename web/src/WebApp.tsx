@@ -14,7 +14,7 @@ export default function WebApp() {
   const [sections, setSections] = useState<Section[]>(() => 
     DUMMY_SECTIONS.map(s => ({
       ...s,
-      questions: s.questions.map(q => ({ ...q, type: 'objective' as const }))
+      questions: s.questions.map(q => ({ ...q, type: 'rating' as const }))
     }))
   );
 

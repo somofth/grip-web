@@ -100,7 +100,7 @@ const BANNER_SLIDES = [
         tag: "Beta Tester 모집",
         title: <>신제품 평가하고<br/>포인트 받아가세요</>,
         desc: <>상세페이지에 대한 솔직한 의견을 남겨주시면<br/>건당 최대 <span className="text-yellow-400 font-bold">1,000P</span>를 드립니다.</>,
-        image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&auto=format&fit=crop&q=60",
+        image: "/banners/banner01.jpg",
         color: "bg-blue-600"
     },
     {
@@ -108,7 +108,7 @@ const BANNER_SLIDES = [
         tag: "매일매일 이벤트",
         title: <>룰렛 돌리고<br/>추가 포인트 팡팡</>,
         desc: <>꽝 없는 100% 당첨 룰렛!<br/>지금 바로 참여해보세요.</>,
-        image: "https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=800&auto=format&fit=crop&q=60",
+        image: "/banners/banner02.jpg",
         color: "bg-purple-600"
     },
     {
@@ -116,7 +116,7 @@ const BANNER_SLIDES = [
         tag: "우수 리뷰어",
         title: <>우수 리포트로 선정되면<br/>추가 포인트를 드려요</>,
         desc: <>꼼꼼한 피드백을 남겨주신 분께<br/>보너스 <span className="text-yellow-400 font-bold">5,000P</span> 지급!</>,
-        image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=60",
+        image: "/banners/banner03.jpg",
         color: "bg-orange-600"
     }
 ];
@@ -127,14 +127,42 @@ export function Feed({ onSelectProduct, onSelectABTest }: FeedProps) {
     const [selectedCategory, setSelectedCategory] = useState("전체");
     const [activeTab, setActiveTab] = useState<'home' | 'store' | 'wishlist' | 'my'>('home');
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [direction, setDirection] = useState(0);
+
+    const paginate = (newDirection: number) => {
+        setDirection(newDirection);
+        setCurrentSlide((prev) => (prev + newDirection + BANNER_SLIDES.length) % BANNER_SLIDES.length);
+    };
 
     // Auto-swipe banner
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % BANNER_SLIDES.length);
+            paginate(1);
         }, 5000);
         return () => clearInterval(timer);
     }, []);
+
+    const swipeConfidenceThreshold = 10000;
+    const swipePower = (offset: number, velocity: number) => {
+        return Math.abs(offset) * velocity;
+    };
+
+    const variants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 1000 : -1000,
+            opacity: 0
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1
+        },
+        exit: (direction: number) => ({
+            zIndex: 0,
+            x: direction < 0 ? 1000 : -1000,
+            opacity: 0
+        })
+    };
 
     return (
         <div className="w-full h-full bg-[#F2F4F6] relative flex flex-col text-gray-900">
@@ -157,39 +185,65 @@ export function Feed({ onSelectProduct, onSelectABTest }: FeedProps) {
                     <div className="flex-1 overflow-y-auto no-scrollbar">
                         {/* Banner Carousel */}
                         <div className="relative w-full h-64 bg-gray-900 overflow-hidden">
-                            <AnimatePresence mode="wait">
+                            <AnimatePresence initial={false} custom={direction}>
                                 <motion.div
                                     key={currentSlide}
-                                    initial={{ opacity: 0, x: 100 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -100 }}
-                                    transition={{ duration: 0.5 }}
+                                    custom={direction}
+                                    variants={variants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{
+                                        x: { type: "tween", duration: 0.7, ease: "easeInOut" },
+                                        opacity: { duration: 0.2 }
+                                    }}
+                                    drag="x"
+                                    dragConstraints={{ left: 0, right: 0 }}
+                                    dragElastic={1}
+                                    onDragEnd={(e, { offset, velocity }) => {
+                                        const swipe = swipePower(offset.x, velocity.x);
+                                        if (swipe < -swipeConfidenceThreshold) {
+                                            paginate(1);
+                                        } else if (swipe > swipeConfidenceThreshold) {
+                                            paginate(-1);
+                                        }
+                                    }}
                                     className="absolute inset-0"
                                 >
                                     <img 
                                         src={BANNER_SLIDES[currentSlide].image} 
                                         alt="Banner" 
-                                        className="w-full h-full object-cover opacity-60"
+                                        className={cn(
+                                            "w-full h-full object-cover opacity-100"
+                                        )}
+                                        draggable="false"
                                     />
-                                    <div className="absolute inset-0 flex flex-col justify-center px-8">
-                                        <span className={cn("inline-block px-3 py-1 text-white text-xs font-bold rounded-full w-fit mb-3", BANNER_SLIDES[currentSlide].color)}>
-                                            {BANNER_SLIDES[currentSlide].tag}
-                                        </span>
-                                        <h2 className="text-3xl font-bold text-white leading-tight mb-2">
-                                            {BANNER_SLIDES[currentSlide].title}
-                                        </h2>
-                                        <p className="text-gray-200 text-sm mb-6">
-                                            {BANNER_SLIDES[currentSlide].desc}
-                                        </p>
-                                    </div>
+                                    {/* Text Overlay Removed for full image banners */}
+                                    {/* {currentSlide !== 0 && currentSlide !== 1 && (
+                                        <div className="absolute inset-0 flex flex-col justify-center px-8">
+                                            <span className={cn("inline-block px-3 py-1 text-white text-xs font-bold rounded-full w-fit mb-3", BANNER_SLIDES[currentSlide].color)}>
+                                                {BANNER_SLIDES[currentSlide].tag}
+                                            </span>
+                                            <h2 className="text-3xl font-bold text-white leading-tight mb-2">
+                                                {BANNER_SLIDES[currentSlide].title}
+                                            </h2>
+                                            <p className="text-gray-200 text-sm mb-6">
+                                                {BANNER_SLIDES[currentSlide].desc}
+                                            </p>
+                                        </div>
+                                    )} */}
                                 </motion.div>
                             </AnimatePresence>
                             
                             {/* Dots */}
-                            <div className="absolute bottom-4 left-8 flex gap-2 z-10">
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
                                 {BANNER_SLIDES.map((_, idx) => (
-                                    <div 
+                                    <button 
                                         key={idx} 
+                                        onClick={() => {
+                                            setDirection(idx > currentSlide ? 1 : -1);
+                                            setCurrentSlide(idx);
+                                        }}
                                         className={cn(
                                             "w-2 h-2 rounded-full transition-all", 
                                             idx === currentSlide ? "bg-white w-6" : "bg-white/40"

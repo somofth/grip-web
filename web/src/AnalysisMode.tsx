@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, CheckCircle2, ArrowRight, ChevronDown, HelpCircle, Plus } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Check, HelpCircle, Plus, Sparkles, AlertCircle, Play, Star, List, Pencil, CheckCircle2, ArrowRight, Eye } from 'lucide-react';
 import { cn } from "./lib/utils";
-import { LOADING_MESSAGES } from "./data/optimizerData";
+import { LOADING_MESSAGES, AI_QUESTION_SUGGESTIONS } from "./data/optimizerData";
+import { TargetingMode } from "./TargetingMode";
 import type { AnalysisState, Section } from "./types";
 import gripLogo from './assets/grip-logo-w.png';
 
@@ -40,11 +41,38 @@ function QuestionAccordion({
         onUpdate(updated);
     };
 
+    const handleTypeChange = (id: string, newType: 'rating' | 'choice' | 'text') => {
+        let updatedQuestions = questions.map(q => {
+            if (q.id === id) {
+                const updatedQ = { ...q, type: newType };
+                // Generate options if switching to choice and no options exist
+                if (newType === 'choice' && (!q.options || q.options.length === 0)) {
+                    const suggestion = AI_QUESTION_SUGGESTIONS[q.id];
+                    if (suggestion) {
+                        updatedQ.options = suggestion.options;
+                        updatedQ.text = suggestion.rephrased; // Update text for better context
+                    } else {
+                        // Fallback for custom added questions
+                        updatedQ.options = [
+                            { emoji: "💪", text: "완전 강력 추천! (매우 긍정)" },
+                            { emoji: "🙂", text: "대체로 만족해요 (긍정)" },
+                            { emoji: "🤔", text: "보통이에요 (중립)" },
+                            { emoji: "😤", text: "별로예요 (부정)" }
+                        ];
+                    }
+                }
+                return updatedQ;
+            }
+            return q;
+        });
+        onUpdate(updatedQuestions);
+    };
+
     const handleAddQuestion = () => {
         const newQuestion = {
             id: `manual_${Date.now()}`,
             text: "",
-            type: 'objective' as const,
+            type: 'rating' as const,
             logic: "사용자가 직접 추가한 질문입니다."
         };
         onUpdate([...questions, newQuestion]);
@@ -76,19 +104,77 @@ function QuestionAccordion({
                     >
                         <div className="pt-4 space-y-3">
                             {questions.map((q) => (
-                                <div key={q.id} className="bg-gray-50 rounded-xl p-4 text-base relative group/question">
-                                    <div className="flex items-start gap-2">
+                                <div key={q.id} className="bg-gray-50 rounded-xl p-4 text-base relative group/question border border-gray-300">
+                                    <div className="flex items-start gap-3 w-full">
                                         <span className="font-bold text-gray-800 mt-2 shrink-0">Q.</span>
-                                        <input 
-                                            type="text"
-                                            value={q.text}
-                                            onChange={(e) => handleTextChange(q.id, e.target.value)}
-                                            className="w-full bg-transparent border-b border-transparent focus:border-blue-500 focus:outline-none py-1.5 px-1 font-bold text-gray-800 placeholder:text-gray-400"
-                                            placeholder="질문을 입력하세요"
-                                        />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="text"
+                                                    value={q.text}
+                                                    onChange={(e) => handleTextChange(q.id, e.target.value)}
+                                                    className="flex-1 bg-transparent border-b border-transparent focus:border-blue-500 focus:outline-none py-1.5 px-1 font-bold text-gray-800 placeholder:text-gray-400"
+                                                    placeholder="질문을 입력하세요"
+                                                />
+                                                <div className="flex gap-1 shrink-0">
+                                                    <button
+                                                        onClick={() => handleTypeChange(q.id, 'rating')}
+                                                        className={cn(
+                                                            "px-2 py-1 rounded-md text-[10px] font-bold transition-colors flex items-center gap-1",
+                                                            q.type === 'rating' ? "bg-blue-100 text-blue-600 ring-1 ring-blue-500" : "bg-white border border-gray-200 text-gray-400 hover:bg-gray-100"
+                                                        )}
+                                                        title="별점"
+                                                    >
+                                                        <Star size={16} className={q.type === 'rating' ? "fill-blue-600" : ""} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleTypeChange(q.id, 'choice')}
+                                                        className={cn(
+                                                            "px-2 py-1 rounded-md text-[10px] font-bold transition-colors flex items-center gap-1",
+                                                            q.type === 'choice' ? "bg-blue-100 text-blue-600 ring-1 ring-blue-500" : "bg-white border border-gray-200 text-gray-400 hover:bg-gray-100"
+                                                        )}
+                                                        title="보기"
+                                                    >
+                                                        <List size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleTypeChange(q.id, 'text')}
+                                                        className={cn(
+                                                            "px-2 py-1 rounded-md text-[10px] font-bold transition-colors flex items-center gap-1",
+                                                            q.type === 'text' ? "bg-blue-100 text-blue-600 ring-1 ring-blue-500" : "bg-white border border-gray-200 text-gray-400 hover:bg-gray-100"
+                                                        )}
+                                                        title="서술"
+                                                    >
+                                                        <Pencil size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/* Options Display for Choice Type */}
+                                    {q.type === 'choice' && q.options && (
+                                        <div className="mt-4 pl-8 grid grid-cols-1 gap-2">
+                                            {q.options.map((opt, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2 text-sm text-gray-700">
+                                                    <span className="text-xl">{opt.emoji}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={opt.text}
+                                                        onChange={(e) => {
+                                                            const newOptions = [...(q.options || [])];
+                                                            newOptions[idx] = { ...opt, text: e.target.value };
+                                                            onUpdate(questions.map(qt => qt.id === q.id ? { ...qt, options: newOptions } : qt));
+                                                        }}
+                                                        className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-gray-600 font-medium"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {q.logic && (
-                                        <p className="text-gray-500 text-base pl-8 border-l-2 border-primary/20 ml-1 mt-1">
+                                        <p className="text-gray-500 text-sm pl-8 border-l-2 border-primary/20 ml-1 mt-3">
                                             💡 {q.logic}
                                         </p>
                                     )}
@@ -131,6 +217,14 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
   // Multi-select state
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['detail']);
   const [thumbnailOptionStep, setThumbnailOptionStep] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - clientHeight > 0) {
+        setScrollProgress(scrollTop / (scrollHeight - clientHeight));
+    }
+  };
 
   const handleSelection = (type: string) => {
       if (type === 'thumbnail') {
@@ -220,6 +314,27 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                 </motion.p>
              )}
           </motion.div>
+
+          {/* Persisted URL Input (Read-Only) */}
+          {isComplete && (
+            <motion.div 
+                layout
+                initial={{ opacity: 0, y: 10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className="w-full"
+            >
+                <div className="relative flex items-center bg-white/10 rounded-full p-4 border border-white/20 backdrop-blur-sm">
+                    <Search className="text-white/60 ml-1 w-5 h-5 mr-3" />
+                    <input 
+                        type="text" 
+                        value={url}
+                        disabled
+                        className="flex-1 bg-transparent border-none text-white text-lg px-0 py-0 focus:ring-0 focus:outline-none opacity-80 placeholder:text-white/30 truncate"
+                        placeholder="https://example.com/product/12345"
+                    />
+                </div>
+            </motion.div>
+          )}
 
            {/* Input Section - Only visible in 'idle' */}
           <AnimatePresence mode="wait">
@@ -474,7 +589,19 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                 className="flex-1 h-full bg-[#F2F4F6] relative z-20 flex flex-col overflow-hidden"
             >
                 <AnimatePresence mode="wait">
-                    {view === 'analysis' ? (
+                    {view === 'targeting' && (
+                        <motion.div
+                            key="targeting"
+                            initial={{ x: "100%", opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: "100%", opacity: 0 }}
+                            transition={{ type: "spring", damping: 30, stiffness: 200 }}
+                            className="bg-white absolute inset-0 z-30"
+                        >
+                            <TargetingMode onBack={() => setView('analysis')} />
+                        </motion.div>
+                    )}
+                    {view === 'analysis' && (
                         <motion.div 
                             key="analysis"
                             initial={{ opacity: 0 }}
@@ -484,7 +611,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                             className="flex flex-col h-full relative"
                         >
                             {/* Header */}
-                            <div className="bg-white px-8 py-6 shadow-sm z-10 flex justify-between items-center">
+                            <div className="bg-white px-8 py-6 shadow-sm z-10 flex justify-between items-center relative">
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                                         <CheckCircle2 className="text-emerald-500 fill-emerald-50" />
@@ -493,16 +620,24 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                     <p className="text-gray-500 mt-1">AI가 맥락에 따라 상세페이지를 재구성했습니다.</p>
                                 </div>
                                 <button 
-                                    onClick={() => setView('targeting')}
-                                    className="bg-[#3182F6] hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                                    className="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2"
                                 >
-                                    <Plus size={18} />
-                                    프로젝트 만들기
+                                    <Eye size={18} />
+                                    모바일 미리보기
                                 </button>
+                                {/* Scroll Progress Bar */}
+                                <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
+                                    <motion.div 
+                                        className="h-full bg-[#3182F6]"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${scrollProgress * 100}%` }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Content Grid */}
-                            <div className="flex-1 overflow-y-auto p-8">
+                            <div className="flex-1 overflow-y-auto p-8" onScroll={handleScroll}>
                                 <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
                                     {sections.map((section, idx) => (
                                         <motion.div
@@ -510,7 +645,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.1 + 0.5 }}
-                                            className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col"
+                                            className="bg-white rounded-3xl p-8 shadow-sm border border-gray-300 hover:shadow-md transition-shadow group flex flex-col"
                                         >
                                             <div className="flex items-start gap-8">
                                                 <div className="flex-1">
@@ -569,122 +704,15 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                         </motion.div>
                                     ))}
                                 </div>
-                            </div>
-                        </motion.div>
-                    ) : (
-                        <motion.div 
-                            key="targeting"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex flex-col h-full relative"
-                        >
-                            <div className="bg-white px-8 py-6 shadow-sm z-10">
-                                <h2 className="text-2xl font-bold text-gray-900">프로젝트 설정</h2>
-                                <p className="text-gray-500 mt-1">최적화된 분석 결과를 위해 타깃 정보를 입력해주세요.</p>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-8">
-                                <div className="max-w-2xl mx-auto space-y-8 pb-24">
-                                    {/* Category */}
-                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">A. 어떤 상품인가요?</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {CATEGORIES.map(cat => (
-                                                <button
-                                                    key={cat}
-                                                    onClick={() => setTargetData({...targetData, category: cat})}
-                                                    className={cn(
-                                                        "px-4 py-3 rounded-xl font-medium transition-all text-sm",
-                                                        targetData.category === cat 
-                                                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
-                                                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                                    )}
-                                                >
-                                                    {cat}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </section>
-
-                                    {/* Target Audience */}
-                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">B. 누가 주 고객인가요?</h3>
-                                        
-                                        <div className="mb-6">
-                                            <p className="text-sm text-gray-500 mb-3 font-medium">성별</p>
-                                            <div className="flex gap-2">
-                                                {TARGET_GENDERS.map(gender => (
-                                                    <button
-                                                        key={gender}
-                                                        onClick={() => setTargetData({...targetData, gender})}
-                                                        className={cn(
-                                                            "flex-1 py-3 rounded-xl font-medium transition-all text-sm",
-                                                            targetData.gender === gender
-                                                                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" 
-                                                                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                                        )}
-                                                    >
-                                                        {gender}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500 mb-3 font-medium">연령대 (중복 가능)</p>
-                                            <div className="flex gap-2">
-                                                {TARGET_AGES.map(age => (
-                                                    <button
-                                                        key={age}
-                                                        onClick={() => handleAgeToggle(age)}
-                                                        className={cn(
-                                                            "flex-1 py-3 rounded-xl font-medium transition-all text-sm border-2",
-                                                            targetData.ages.includes(age)
-                                                                ? "border-blue-600 bg-blue-50 text-blue-700" 
-                                                                : "border-transparent bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                                        )}
-                                                    >
-                                                        {age}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    {/* Selling Point */}
-                                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">C. 가장 강조하고 싶은 강점은?</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {SELLING_POINTS.map(point => (
-                                                <button
-                                                    key={point}
-                                                    onClick={() => setTargetData({...targetData, sellingPoint: point})}
-                                                    className={cn(
-                                                        "px-4 py-3 rounded-xl font-medium transition-all text-sm",
-                                                        targetData.sellingPoint === point
-                                                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" 
-                                                            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                                                    )}
-                                                >
-                                                    {point}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </section>
+                                <div className="max-w-4xl mx-auto mt-12 flex justify-end pb-12">
+                                     <button 
+                                        onClick={() => setView('targeting')}
+                                        className="bg-[#3182F6] hover:bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2 text-lg hover:scale-105 active:scale-95 duration-200"
+                                    >
+                                        <Plus size={24} />
+                                        프로젝트 만들기
+                                    </button>
                                 </div>
-                            </div>
-
-                            {/* Footer Action */}
-                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 z-20">
-                                <button
-                                    onClick={onComplete}
-                                    disabled={!isFormValid}
-                                    className="w-full max-w-2xl mx-auto block py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed bg-[#3182F6] text-white shadow-blue-500/20"
-                                >
-                                    분석 시작하기
-                                </button>
                             </div>
                         </motion.div>
                     )}

@@ -19,8 +19,8 @@ export const DUMMY_SECTIONS = [
     images: ["/detailshots/01.jpg", "/detailshots/03.jpg"],
     color: "from-blue-50 to-white",
     questions: [
-      { id: "q1_1", text: "메인 이미지가 시선을 끌고 호기심을 자극하나요?", logic: "방문 후 3초 이내에 이탈률이 가장 높으므로, 시각적 호기심 자극이 필수적입니다." },
-      { id: "q1_2", text: "지저분한 책상 상황이 당신의 상황과 공감이 가나요?", logic: "고객의 페인 포인트(Pain Point)를 건드려 문제 해결 욕구를 불러일으키기 위함입니다." }
+      { id: "q1_1", text: "메인 이미지가 시선을 끌고 호기심을 자극하나요?", logic: "방문 후 3초 이내에 이탈률이 가장 높으므로, 시각적 호기심 자극이 필수적입니다.", type: 'objective' },
+      { id: "q1_2", text: "지저분한 책상 상황이 당신의 상황과 공감이 가나요?", logic: "고객의 페인 포인트(Pain Point)를 건드려 문제 해결 욕구를 불러일으키기 위함입니다.", type: 'objective' }
     ]
   },
   { 
@@ -31,8 +31,8 @@ export const DUMMY_SECTIONS = [
     images: ["/detailshots/06.jpg", "/detailshots/07.jpg", "/detailshots/08.jpg"],
     color: "from-gray-50 to-white",
     questions: [
-      { id: "q2_1", text: "두꺼운 상판과 프레임이 튼튼할 것이라는 확신을 주나요?", logic: "제품의 물리적 스펙을 시각적으로 강조하여 신뢰도를 높이는 전략입니다." },
-      { id: "q2_2", text: "하중 테스트가 내구성을 증명하기에 충분한가요?", logic: "객관적인 테스트 데이터는 소비자의 불안감을 해소하는 가장 강력한 장치입니다." }
+      { id: "q2_1", text: "두꺼운 상판과 프레임이 튼튼할 것이라는 확신을 주나요?", logic: "제품의 물리적 스펙을 시각적으로 강조하여 신뢰도를 높이는 전략입니다.", type: 'objective' },
+      { id: "q2_2", text: "하중 테스트가 내구성을 증명하기에 충분한가요?", logic: "객관적인 테스트 데이터는 소비자의 불안감을 해소하는 가장 강력한 장치입니다.", type: 'objective' }
     ]
   },
   { 
@@ -43,8 +43,8 @@ export const DUMMY_SECTIONS = [
     images: ["/detailshots/04.jpg", "/detailshots/05.jpg"],
     color: "from-emerald-50 to-white",
     questions: [
-      { id: "q3_1", text: "넓은 상판이 당신의 생활 패턴에 유용해 보이나요?", logic: "단순한 기능 설명을 넘어, 고객의 라이프스타일에 맞춘 이점을 제시해야 합니다." },
-      { id: "q3_2", text: "E0 친환경 등급 정보가 안심을 주나요?", logic: "건강과 안전에 민감한 타깃층에게 필수적인 구매 결정 요인입니다." }
+      { id: "q3_1", text: "넓은 상판이 당신의 생활 패턴에 유용해 보이나요?", logic: "단순한 기능 설명을 넘어, 고객의 라이프스타일에 맞춘 이점을 제시해야 합니다.", type: 'objective' },
+      { id: "q3_2", text: "E0 친환경 등급 정보가 안심을 주나요?", logic: "건강과 안전에 민감한 타깃층에게 필수적인 구매 결정 요인입니다.", type: 'objective' }
     ]
   },
   { 
@@ -55,8 +55,8 @@ export const DUMMY_SECTIONS = [
     images: ["/detailshots/02.jpg", "/detailshots/09.jpg"],
     color: "from-indigo-50 to-white",
     questions: [
-      { id: "q4_1", text: "핵심 장점들이 한눈에 잘 들어오나요?", logic: "이탈 직전 마지막으로 구매 욕구를 상기시키는 요약(Recap) 과정입니다." },
-      { id: "q4_2", text: "구매에 필요한 사이즈/소재 정보가 명확한가요?", logic: "구매 결정 단계에서의 불확실성을 제거하여 전환율을 높이기 위함입니다." }
+      { id: "q4_1", text: "핵심 장점들이 한눈에 잘 들어오나요?", logic: "이탈 직전 마지막으로 구매 욕구를 상기시키는 요약(Recap) 과정입니다.", type: 'objective' },
+      { id: "q4_2", text: "구매에 필요한 사이즈/소재 정보가 명확한가요?", logic: "구매 결정 단계에서의 불확실성을 제거하여 전환율을 높이기 위함입니다.", type: 'objective' }
     ]
   },
 ];

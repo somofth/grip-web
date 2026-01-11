@@ -4,7 +4,8 @@ export type AnalysisState = 'idle' | 'crawling' | 'analyzing' | 'segmenting' | '
 export interface Question {
   id: string;
   text: string;
-  type?: 'objective' | 'subjective'; // Added type
+  type?: 'rating' | 'choice' | 'text';
+  options?: { emoji: string; text: string; }[];
   logic?: string;
 }
 
