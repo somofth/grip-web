@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { cn } from "./lib/utils"; // Adjusted path
-import { MODE_LABELS, DUMMY_SECTIONS } from "./data/optimizerData";
+import { cn } from "./lib/utils";
+import { DUMMY_SECTIONS } from "./data/optimizerData";
 import type { Mode, Section } from "./types";
 import { AnalysisMode } from "./AnalysisMode";
 import { DashboardMode } from "./DashboardMode";
@@ -11,10 +11,11 @@ export default function WebApp() {
   const [mode, setMode] = useState<Mode>(1);
 
   // Lifted State for Sections (Shared)
+  // Initialize with DUMMY_SECTIONS which serves as the "default" state
   const [sections, setSections] = useState<Section[]>(() => 
     DUMMY_SECTIONS.map(s => ({
       ...s,
-      questions: s.questions.map(q => ({ ...q, type: 'rating' as const }))
+      questions: s.questions.map(q => ({ ...q, type: q.type || 'rating' }))
     }))
   );
 
@@ -44,7 +45,7 @@ export default function WebApp() {
             onSectionsChange={setSections}
           />
         )}
-        {mode === 3 && <DashboardMode key="mode3" />}
+        {mode === 3 && <DashboardMode key="mode3" sections={sections} />}
       </AnimatePresence>
 
       {/* Mode Indicator Overlay */}

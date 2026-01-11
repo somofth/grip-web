@@ -216,7 +216,6 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
 
   // Multi-select state
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['detail']);
-  const [thumbnailOptionStep, setThumbnailOptionStep] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -227,20 +226,12 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
   };
 
   const handleSelection = (type: string) => {
-      if (type === 'thumbnail') {
-          setThumbnailOptionStep(true);
-          return;
-      }
       setSelectedTypes(prev => 
         prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
       );
   };
 
-  const handleThumbnailOptionSelect = (option: string) => {
-      setSelectedTypes(['thumbnail']); // Ensure only thumbnail is selected or handle distinct logic
-      setStatus('complete'); // Proceed to next step
-      setThumbnailOptionStep(false);
-  };
+
 
   const handleProceed = () => {
     if (selectedTypes.length === 0) return;
@@ -384,22 +375,19 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                         <button
                             onClick={() => handleSelection('thumbnail')}
                             className={cn(
-                                "relative rounded-[2.5rem] p-0 text-left transition-all duration-300 hover:scale-[1.03] group overflow-hidden border-4 flex flex-col h-[28rem]",
+                                "relative rounded-[2.5rem] p-0 text-left transition-all duration-300 hover:scale-[1.03] group overflow-hidden border-4 flex flex-col h-[28rem] aspect-[5/6] justify-self-end",
                                 selectedTypes.includes('thumbnail') 
-                                    ? "bg-white/20 border-white ring-8 ring-white/10 shadow-2xl" 
-                                    : "bg-white/10 border-transparent hover:bg-white/15"
+                                    ? "bg-white border-blue-200 ring-8 ring-white/10 shadow-2xl" 
+                                    : "bg-white/90 border-transparent hover:bg-white"
                             )}
                         >
-                            <div className="h-[70%] w-full relative bg-gray-900 border-b border-white/10">
+                            <div className="h-[70%] w-full relative bg-gray-900 border-b border-gray-100">
                                 <img 
                                     src="/thumbnail.jpg" 
                                     alt="Thumbnail Analysis" 
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100" 
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <div className="absolute bottom-5 left-5 bg-black/60 backdrop-blur-xl px-5 py-2.5 rounded-full text-base font-bold text-white flex items-center gap-2 border border-white/10">
-                                    <span className="text-xl">🖼️</span> 썸네일
-                                </div>
+                                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/50 to-transparent" />
                                 {selectedTypes.includes('thumbnail') && (
                                     <motion.div 
                                         initial={{ scale: 0 }}
@@ -411,8 +399,8 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                 )}
                             </div>
                             <div className="h-[30%] w-full p-8 flex flex-col justify-center">
-                                <h3 className="text-2xl font-bold text-white mb-2">썸네일 분석</h3>
-                                <p className="text-blue-100 text-lg leading-relaxed opacity-90 font-medium">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">썸네일 분석</h3>
+                                <p className="text-gray-600 text-lg leading-relaxed font-medium">
                                     클릭률을 높이는<br/>매력적인 썸네일 진단
                                 </p>
                             </div>
@@ -421,7 +409,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                         <button
                             onClick={() => handleSelection('detail')}
                             className={cn(
-                                "relative rounded-[2.5rem] p-0 text-left transition-all duration-300 hover:scale-[1.03] group overflow-hidden border-4 flex flex-col h-[28rem]",
+                                "relative rounded-[2.5rem] p-0 text-left transition-all duration-300 hover:scale-[1.03] group overflow-hidden border-4 flex flex-col h-[28rem] aspect-[5/6]",
                                 selectedTypes.includes('detail') 
                                     ? "bg-white border-blue-200 ring-8 ring-white/10 shadow-2xl" 
                                     : "bg-white/90 border-transparent hover:bg-white"
@@ -438,9 +426,6 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                     </div>
                                 ))}
                                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/50 to-transparent" />
-                                <div className="absolute bottom-5 left-5 bg-white/90 backdrop-blur-xl px-5 py-2.5 rounded-full text-base font-bold text-gray-900 flex items-center gap-2 shadow-sm border border-gray-200">
-                                    <span className="text-xl">📱</span> 상세페이지
-                                </div>
                                 {selectedTypes.includes('detail') && (
                                     <motion.div 
                                         initial={{ scale: 0 }}
@@ -452,7 +437,12 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                                 )}
                             </div>
                             <div className="h-[30%] w-full p-8 flex flex-col justify-center">
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">상세페이지 분석</h3>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h3 className="text-2xl font-bold text-gray-900">상세페이지 분석</h3>
+                                    <span className="bg-blue-600 text-white text-xs px-2.5 py-1 rounded-full font-bold animate-pulse shadow-md">
+                                        👍 추천
+                                    </span>
+                                </div>
                                 <p className="text-gray-600 text-lg leading-relaxed font-medium">
                                     구매 전환율을 높이는<br/>최적의 논리 구조 설계
                                 </p>
@@ -460,7 +450,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                         </button>
                     </div>
                     
-                    <div className="fixed bottom-12 left-0 right-0 z-50 flex justify-center px-4 w-full pointer-events-none">
+                    <div className="fixed bottom-20 left-0 right-0 z-50 flex justify-center px-4 w-full pointer-events-none">
                          <motion.button 
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -482,74 +472,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange }: Analysi
                         URL 다시 입력하기
                     </button>
 
-                    {/* Thumbnail Option Modal */}
-                    <AnimatePresence>
-                        {thumbnailOptionStep && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                                <motion.div 
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    onClick={() => setThumbnailOptionStep(false)}
-                                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                                />
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                    className="bg-white rounded-[2.5rem] p-10 max-w-4xl w-full relative z-10 shadow-2xl space-y-8"
-                                >
-                                    <div className="text-center space-y-2">
-                                        <h3 className="text-3xl font-bold text-gray-900">썸네일 정밀 분석</h3>
-                                        <p className="text-gray-500 text-lg">원하는 분석 방식을 선택해주세요.</p>
-                                    </div>
 
-                                    <div className="grid grid-cols-3 gap-6">
-                                        {[
-                                            { 
-                                                title: "경쟁사 대결", 
-                                                desc: "이기는 썸네일 찾기", 
-                                                icon: "⚔️", 
-                                                color: "bg-red-50 hover:bg-red-100 text-red-600 border-red-100" 
-                                            },
-                                            { 
-                                                title: "내 편집본 대결", 
-                                                desc: "A/B 테스트 시뮬레이션", 
-                                                icon: "👥", 
-                                                color: "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100" 
-                                            },
-                                            { 
-                                                title: "단독 평가", 
-                                                desc: "절대적 매력도 진단", 
-                                                icon: "📊", 
-                                                color: "bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-100" 
-                                            }
-                                        ].map((opt, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => handleThumbnailOptionSelect(opt.title)}
-                                                className={cn(
-                                                    "flex flex-col items-center justify-center p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-1",
-                                                    opt.color
-                                                )}
-                                            >
-                                                <span className="text-6xl mb-6 filter drop-shadow-lg">{opt.icon}</span>
-                                                <h4 className="text-xl font-bold mb-2">{opt.title}</h4>
-                                                <p className="text-sm opacity-80 font-medium">{opt.desc}</p>
-                                            </button>
-                                        ))}
-                                    </div>
-                                    
-                                    <button 
-                                        onClick={() => setThumbnailOptionStep(false)}
-                                        className="w-full text-center text-gray-400 font-medium hover:text-gray-600 mt-4"
-                                    >
-                                        취소하고 돌아가기
-                                    </button>
-                                </motion.div>
-                            </div>
-                        )}
-                    </AnimatePresence>
                 </motion.div>
             )}
 
