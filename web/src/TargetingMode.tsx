@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, Users, CreditCard, Zap, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Users, CreditCard, Zap, CheckCircle2 } from 'lucide-react';
 import { cn } from "./lib/utils";
 
 // --- Options Data ---
@@ -18,18 +19,24 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
     const [targetGender, setTargetGender] = useState<'male' | 'female' | 'all' | null>(null);
     const [targetAge, setTargetAge] = useState<string[]>([]);
     const [targetVolume, setTargetVolume] = useState<number>(50);
-    const [isExpress, setIsExpress] = useState<boolean>(false);
+    const [isAdvanced, setIsAdvanced] = useState<boolean>(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // --- Calculation ---
-    const rewardPerPanel = isExpress ? 200 : 100;
+    // Advanced plan costs double the points per person (200P vs 100P)
+    const rewardPerPanel = isAdvanced ? 200 : 100;
     const totalCost = useMemo(() => {
         let base = 0;
         if (targetVolume === 30) base = 19900;
         else if (targetVolume === 50) base = 29900;
         else if (targetVolume === 100) base = 49900;
         
-        return isExpress ? base * 2 : base;
-    }, [targetVolume, isExpress]);
+        return isAdvanced ? base * 2 : base;
+    }, [targetVolume, isAdvanced]);
 
     const isValid = category && targetGender && targetAge.length > 0;
 
@@ -40,30 +47,82 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
         );
     };
 
+    // --- Portal Content (Estimate Card) ---
+    const estimateCard = (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+        >
+            <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100"> 
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <CreditCard size={20} className="text-gray-400" />
+                    예상 견적서
+                </h3>
+
+                <div className="space-y-4 mb-6">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">모집 인원</span>
+                        <span className="font-bold text-gray-900">{targetVolume}명</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">플랜</span>
+                        <span className="font-bold text-blue-600">
+                            {isAdvanced ? "상세 분석" : "간편 분석"}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                    <div className="flex justify-between items-end">
+                        <span className="text-sm font-bold text-gray-500">총 결제 금액</span>
+                        <span className="text-2xl font-bold text-gray-900">
+                            {totalCost.toLocaleString()}
+                            <span className="text-base font-normal text-gray-400 ml-1">원</span>
+                        </span>
+                    </div>
+                </div>
+
+                <button
+                    className="w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[#3182F6] hover:bg-[#1B64DA] shadow-lg shadow-blue-500/20 active:scale-95"
+                    disabled={!isValid}
+                >
+                    {isValid ? (
+                        <span className="flex items-center justify-center gap-2">
+                            {totalCost.toLocaleString()}원으로 시작하기
+                            <ChevronRight size={18} />
+                        </span>
+                    ) : (
+                        "필수 정보를 입력해주세요"
+                    )}
+                </button>
+                <p className="text-xs text-center text-gray-400 mt-3">
+                    위 금액은 VAT 별도입니다.
+                </p>
+            </div>
+        </motion.div>
+    );
+
+    const portalTarget = typeof document !== 'undefined' ? document.getElementById('left-panel-portal') : null;
+
     return (
         <div className="flex flex-col h-full bg-[#F2F4F6] overflow-hidden">
+             {/* Portal Injection */}
+             {mounted && portalTarget && createPortal(estimateCard, portalTarget)}
+
             {/* Header */}
-            <div className="bg-white px-8 py-6 border-b border-gray-200 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        ← 뒤로가기
-                    </button>
-                    <h2 className="text-2xl font-bold text-gray-900">프로젝트 통합 설정</h2>
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 block" />
-                    설정 중
-                </div>
+            <div className="bg-white px-8 py-6 border-b border-gray-200 flex items-center gap-4 shrink-0">
+                <button onClick={onBack} className="p-2 -ml-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-all">
+                    <ArrowLeft size={24} />
+                </button>
+                <h2 className="text-2xl font-bold text-gray-900">프로젝트 통합 설정</h2>
             </div>
 
             {/* Content (Scrollable) */}
             <div className="flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="max-w-4xl mx-auto p-8 space-y-8"> {/* Centered Single Column */}
                     
-                    {/* Left Column: Settings Form */}
-                    <div className="lg:col-span-2 space-y-8">
-                        
-                        {/* Section 1: Category */}
+                    {/* Section 1: Category */}
                         <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">1</span>
@@ -178,15 +237,15 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
                          <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">4</span>
-                                예산 및 속도
+                                플랜 선택 (예산 및 데이터 수준)
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {/* Standard Option */}
                                 <button
-                                    onClick={() => setIsExpress(false)}
+                                    onClick={() => setIsAdvanced(false)}
                                     className={cn(
                                         "p-5 rounded-2xl border-2 text-left transition-all relative",
-                                        !isExpress 
+                                        !isAdvanced 
                                             ? "border-blue-500 bg-blue-50/50 ring-1 ring-blue-500" 
                                             : "border-gray-200 bg-white hover:border-gray-300"
                                     )}
@@ -194,29 +253,26 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
                                     <div className="flex justify-between items-start mb-2">
                                         <div className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                                            !isExpress ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
+                                            !isAdvanced ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
                                         )}>
                                             <Users size={20} />
                                         </div>
-                                        {!isExpress && (
+                                        {!isAdvanced && (
                                             <CheckCircle2 size={20} className="text-blue-500" fill="currentColor" color="white" />
                                         )}
                                     </div>
-                                    <h4 className={cn("text-lg font-bold mb-1", !isExpress ? "text-blue-900" : "text-gray-900")}>
-                                        일반 모집
+                                    <h4 className={cn("text-lg font-bold mb-1", !isAdvanced ? "text-blue-900" : "text-gray-900")}>
+                                        간편 분석
                                     </h4>
-                                    <p className="text-sm text-gray-500 mb-4">평균 24시간 내 완료됩니다.</p>
-                                    <div className="font-bold text-lg text-gray-900">
-                                        100P <span className="text-sm font-normal text-gray-400">/ 1인</span>
-                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">평균 24시간 내 완료</p>
                                 </button>
 
-                                {/* Express Option */}
+                                {/* Advanced Option */}
                                 <button
-                                    onClick={() => setIsExpress(true)}
+                                    onClick={() => setIsAdvanced(true)}
                                     className={cn(
                                         "p-5 rounded-2xl border-2 text-left transition-all relative",
-                                        isExpress 
+                                        isAdvanced 
                                             ? "border-purple-500 bg-purple-50/50 ring-1 ring-purple-500" 
                                             : "border-gray-200 bg-white hover:border-gray-300"
                                     )}
@@ -224,75 +280,26 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
                                     <div className="flex justify-between items-start mb-2">
                                         <div className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                                            isExpress ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-400"
+                                            isAdvanced ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-400"
                                         )}>
-                                            <Zap size={20} className={isExpress ? "fill-current" : ""} />
+                                            <Zap size={20} className={isAdvanced ? "fill-current" : ""} />
                                         </div>
-                                        {isExpress && (
+                                        {isAdvanced && (
                                             <CheckCircle2 size={20} className="text-purple-500" fill="currentColor" color="white" />
                                         )}
                                     </div>
-                                    <h4 className={cn("text-lg font-bold mb-1", isExpress ? "text-purple-900" : "text-gray-900")}>
-                                        🚀 급행 모집
+                                    <h4 className={cn("text-lg font-bold mb-1", isAdvanced ? "text-purple-900" : "text-gray-900")}>
+                                        상세 분석
                                     </h4>
-                                    <p className="text-sm text-gray-500 mb-4">2배 보상으로 3시간 내 완료</p>
-                                    <div className="font-bold text-lg text-gray-900">
-                                        200P <span className="text-sm font-normal text-gray-400">/ 1인</span>
+                                    <div className="space-y-1 mb-4">
+                                        <p className="text-sm text-gray-600 font-medium">🚀 3시간 내 초고속 완료</p>
+                                        <p className="text-xs text-purple-600 bg-purple-100 inline-block px-2 py-1 rounded">
+                                            + 행동 데이터 & 타겟 선호도 포함
+                                        </p>
                                     </div>
                                 </button>
                             </div>
                         </section>
-                    </div>
-
-                    {/* Right Column: Estimate Card (Sticky) */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-8 space-y-4">
-                            <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <CreditCard size={20} className="text-gray-400" />
-                                    예상 견적서
-                                </h3>
-
-                                <div className="space-y-4 mb-6">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">모집 인원</span>
-                                        <span className="font-bold text-gray-900">{targetVolume}명</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">1인당 리워드</span>
-                                        <span className="font-bold text-gray-900">{rewardPerPanel}P</span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-sm font-bold text-gray-500">총 결제 금액</span>
-                                        <span className="text-2xl font-bold text-gray-900">
-                                            {totalCost.toLocaleString()}
-                                            <span className="text-base font-normal text-gray-400 ml-1">원</span>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <button
-                                    className="w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[#3182F6] hover:bg-[#1B64DA] shadow-lg shadow-blue-500/20 active:scale-95"
-                                    disabled={!isValid}
-                                >
-                                    {isValid ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            {totalCost.toLocaleString()}원으로 시작하기
-                                            <ChevronRight size={18} />
-                                        </span>
-                                    ) : (
-                                        "필수 정보를 입력해주세요"
-                                    )}
-                                </button>
-                                <p className="text-xs text-center text-gray-400 mt-3">
-                                    위 금액은 VAT 별도입니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
