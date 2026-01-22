@@ -13,7 +13,7 @@ const VOLUMES = [
     { value: 100, label: "확실하게 (Pro)", desc: "정밀 데이터 확보" }
 ];
 
-export function TargetingMode({ onBack }: { onBack: () => void }) {
+export function TargetingMode({ onBack, onComplete }: { onBack: () => void, onComplete: () => void }) {
     // --- State ---
     const [category, setCategory] = useState<string | null>(null);
     const [targetGender, setTargetGender] = useState<'male' | 'female' | 'all' | null>(null);
@@ -86,6 +86,7 @@ export function TargetingMode({ onBack }: { onBack: () => void }) {
                 <button
                     className="w-full py-4 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[#3182F6] hover:bg-[#1B64DA] shadow-lg shadow-blue-500/20 active:scale-95"
                     disabled={!isValid}
+                    onClick={onComplete}
                 >
                     {isValid ? (
                         <span className="flex items-center justify-center gap-2">

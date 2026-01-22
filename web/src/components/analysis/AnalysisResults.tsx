@@ -10,9 +10,10 @@ interface AnalysisResultsProps {
     sections: Section[];
     onSectionsChange: (sections: Section[]) => void;
     selectedTypes: string[];
+    onComplete: () => void;
 }
 
-export function AnalysisResults({ sections, onSectionsChange, selectedTypes }: AnalysisResultsProps) {
+export function AnalysisResults({ sections, onSectionsChange, selectedTypes, onComplete }: AnalysisResultsProps) {
     const [view, setView] = useState<'analysis' | 'targeting'>('analysis');
     const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -58,7 +59,7 @@ export function AnalysisResults({ sections, onSectionsChange, selectedTypes }: A
                         transition={{ type: "spring", damping: 30, stiffness: 200 }}
                         className="bg-white absolute inset-0 z-30"
                     >
-                        <TargetingMode onBack={() => setView('analysis')} />
+                        <TargetingMode onBack={() => setView('analysis')} onComplete={onComplete} />
                     </motion.div>
                 )}
                 {view === 'analysis' && (

@@ -173,7 +173,7 @@ export function Feed({ onSelectProduct, onSelectABTest }: FeedProps) {
             ) : (
                 <>
                     <header className="px-6 py-6 bg-white flex items-center justify-between shadow-sm z-10">
-                        <img src="/grip-logo.png" alt="Grip" className="h-6 object-contain ml-2" />
+                        <img src="/grip-logo.png" alt="Grip" className="h-10 object-contain" />
                         <div className="flex items-center gap-4 text-gray-600">
                             <Search className="w-6 h-6" />
                             <ShoppingBag className="w-6 h-6" />

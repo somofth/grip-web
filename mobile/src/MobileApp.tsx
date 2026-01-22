@@ -67,7 +67,7 @@ export default function MobileApp() {
   const selectedProduct = DUMMY_PRODUCTS.find(p => p.id === selectedProductId);
 
   return (
-    <div className="min-h-screen font-sans text-text bg-[#F2F4F6] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen font-sans text-text bg-white">
       {/* ... (Config Modal remains same) */}
       <AnimatePresence>
           {showConfig && (
@@ -112,8 +112,8 @@ export default function MobileApp() {
           )}
       </AnimatePresence>
 
-      {/* Phone Frame */}
-      <div className="w-full max-w-[400px] h-[844px] bg-white rounded-[3rem] border-[8px] border-gray-900 shadow-2xl overflow-hidden relative flex flex-col">
+      {/* Full Screen App Container */}
+      <div className="w-full h-[100dvh] overflow-hidden bg-white relative flex flex-col">
           <AnimatePresence mode="wait">
              {isLoading ? (
                  <motion.div

@@ -153,7 +153,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange, onInterac
                     selectedTypes={selectedTypes}
                     onSelection={handleSelection}
                     onProceed={() => {
-                        if (selectedTypes.includes('detail')) {
+                        if (selectedTypes.includes('detail') && !url) {
                             setStatus('uploading_detail');
                         } else {
                             setStatus('complete');
@@ -287,6 +287,7 @@ export function AnalysisMode({ onComplete, sections, onSectionsChange, onInterac
                 sections={sections} 
                 onSectionsChange={onSectionsChange}
                 selectedTypes={selectedTypes}
+                onComplete={onComplete}
             />
         )}
       </AnimatePresence>
